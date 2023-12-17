@@ -22,6 +22,9 @@ index 1ae31d86a6..b954316585 100644
 Build Debug configuration for Debugging
 ```
 >cmake-gui -GNinja -S %HOMEPATH%\github\vtk -B %HOMEPATH%\build\vtk
+```
+ * build took about hour and results use 12 GB, bin 2 GB
+```
 >cmake --build %HOMEPATH%\build\vtk --config Debug
 ```
 
