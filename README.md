@@ -53,8 +53,9 @@ C:\Users\simon\github\vtk-tuts\CylinderExample\build\Debug\CylinderExample.exe
 ```
 PS C:\Users\simon\github\vtk-tuts\CylinderExample\build> start CylinderExample.sln
 ```
- ** set Example as startup project
- ** start debugging
+ * After starting
+     * set Example as startup project
+     * start debugging
 
 
 # Tasks
