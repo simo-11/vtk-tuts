@@ -41,7 +41,7 @@ PS C:\Users\simon\github\vtk-tuts\CylinderExample\build> cmake "-DVTK_DIR:PATH=/
 ```
 PS C:\Users\simon\github\vtk-tuts\CylinderExample\build> cmake --build .
 ```
- * run - end qith q or e keys or through window manager
+ * run - end with q or e keys or through window manager
 ```
 C:\Users\simon\github\vtk-tuts\CylinderExample\build\Debug\CylinderExample.exe
 ```
