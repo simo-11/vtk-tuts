@@ -89,6 +89,13 @@ CylinderExample.exe!main(int __formal, char * * __formal) Line 67
 ```
 ![image](https://github.com/simo-11/vtk-tuts/assets/1210784/643e0390-723e-45a8-bddb-8ef7df33916a)
 
+Let Windows decide or Power saving -> UHD
+![image](https://github.com/simo-11/vtk-tuts/assets/1210784/dc3907a3-3901-4c9f-90f4-e595888a8d46)
+
+High performance Nvidia RTX
+![image](https://github.com/simo-11/vtk-tuts/assets/1210784/8fb2c062-dbe3-4efe-a213-59ec18d021c7)
+
+
 
 ## Try ImGui Integration
 
