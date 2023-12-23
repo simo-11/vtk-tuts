@@ -8,8 +8,57 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
+#include <windows.h>
+#include <gl/GL.h>
 
 #include <array>
+#include <sstream>
+#include <vtkWin32OpenGLRenderWindow.h>
+
+namespace {
+    static const char* windowTitle=nullptr;
+    // Callback for the interaction.
+    class tutCallback : public vtkCommand
+    {
+    public:
+        static tutCallback* New()
+        {
+            return new tutCallback;
+        }
+        void Execute(vtkObject* caller, unsigned long, void*) override
+        {
+            if (windowTitle != nullptr) {
+                return;
+            }
+            try {
+                auto interactor = reinterpret_cast<vtkRenderWindowInteractor*>(caller);
+                auto renderWindow = interactor->GetRenderWindow();
+                auto glWindow = static_cast
+                    <vtkWin32OpenGLRenderWindow*>(renderWindow);
+                if (glWindow->SupportsOpenGL()) {
+                    glWindow->ReportCapabilities();
+                    const char* glRenderer = (const char*)glGetString(GL_RENDERER);
+                    std::ostringstream strm;
+                    strm << "Rectangle";
+                    if (glRenderer)
+                        strm << "@" << glRenderer;
+                    std::string s = std::string{ strm.str() };
+                    if(windowTitle!=nullptr){
+                        free((void*)windowTitle);
+                    }
+                    windowTitle = strdup(s.c_str());
+                    renderWindow->SetWindowName(windowTitle);
+                }
+            }
+            catch (...)
+            {
+                std::exception_ptr p = std::current_exception();
+                std::clog << (p ? "got exception" : "null") << std::endl;
+            }
+        }
+        tutCallback() = default;
+    };
+} // namespace
 
 int main(int, char*[])
 {
@@ -19,10 +68,9 @@ int main(int, char*[])
   std::array<unsigned char, 4> bkg{{26, 51, 102, 255}};
   colors->SetColor("BkgColor", bkg.data());
 
-  // This creates a polygonal cylinder model with eight circumferential facets
-  // (i.e, in practice an octagonal prism).
   vtkNew<vtkCylinderSource> cylinder;
-  cylinder->SetResolution(8);
+  int faceCount = 100;
+  cylinder->SetResolution(faceCount);
 
   // The mapper is responsible for pushing the geometry into the graphics
   // library. It may also do color mapping, if scalars or other attributes are
@@ -62,6 +110,9 @@ int main(int, char*[])
   // depending on the nature of the events.
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
   renderWindowInteractor->SetRenderWindow(renderWindow);
+  unsigned long event=vtkCommand::EnterEvent;
+  vtkNew<tutCallback> cb;
+  renderWindowInteractor->AddObserver(event, cb);
 
   // This starts the event loop and as a side effect causes an initial render.
   renderWindow->Render();
