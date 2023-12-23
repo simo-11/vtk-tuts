@@ -99,9 +99,36 @@ High performance Nvidia RTX
 
 ## Try ImGui Integration
 
+### links
+
  * https://github.com/ocornut/imgui/wiki/Bindings
    * https://github.com/jspanchu/vtkDearImGUIInjector
  * https://discourse.vtk.org/t/vtk-dearimgui-integration-through-vtkgenericopenglrenderwindow/4424/2
+
+### integrate vtkDearImGUIInjector using clone
+
+ * https://github.com/simo-11/vtkDearImGUIInjector
+    *   CMakeLists.txt ON -> OFF
+       * option(USE_ADOBE_SPECTRUM_STYLE "Style ImGui with Adobe spectrum look" OFF)
+   * modify  src/CMakeLists.txt to use
+       * set(IMGUI_DIR /users/simon/github/imgui) 
+ * https://github.com/simo-11/imgui
+
+Start visual studio x64 Native tools command propmt 
+```
+C:\Users\simon\github\vtkDearImGUIInjector>cmake "-DVTK_DIR=/users/simon/build/vtk"  -S . -B build
+C:\Users\simon\github\vtkDearImGUIInjector>cmake --build build
+C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(205,13): error C2065:
+'ImGuiKey_KeyPadEnter': undeclared identifier [C:\Users\simon\github\vtkDearImGUIInjector\build\src\vtkDearImGuiInjector.vcxproj]
+$ grep ImGuiKey_KeyPadEnter *.h
+imgui.h:    //ImGuiKey_KeyPadEnter = ImGuiKey_KeypadEnter,              // Renamed in 1.87
+
+:\Users\simon\github\vtkDearImGUIInjector\sample\OverlayUI.cxx(49,52): error C2065:
+'Karla_Regular_compressed_data_base85': undeclared identifier [C:\Users\simon\github\vtkDearImGUIInjector\build\sample\main.vcxproj]
+Move include tow lines earlier so that include is done without spectrum version in use
+C:\Users\simon\github\vtkDearImGUIInjector\build\sample\Debug\main.exe
+```
+idle sample takes about 16 % of GPU which causes constant fan noise.
 
 ## Integrate Cuda
 
