@@ -99,6 +99,10 @@ High performance Nvidia RTX
 
 ## Try ImGui Integration
 
+ * https://github.com/ocornut/imgui/wiki/Bindings
+   * https://github.com/jspanchu/vtkDearImGUIInjector
+ * https://discourse.vtk.org/t/vtk-dearimgui-integration-through-vtkgenericopenglrenderwindow/4424/2
+
 ## Integrate Cuda
 
 
