@@ -108,7 +108,7 @@ High performance Nvidia RTX
 ### integrate vtkDearImGUIInjector using clone
 
  * https://github.com/simo-11/vtkDearImGUIInjector
-    *   CMakeLists.txt ON -> OFF
+    * CMakeLists.txt ON -> OFF
        * option(USE_ADOBE_SPECTRUM_STYLE "Style ImGui with Adobe spectrum look" OFF)
    * modify  src/CMakeLists.txt to use
        * set(IMGUI_DIR /users/simon/github/imgui) 
@@ -125,7 +125,7 @@ imgui.h:    //ImGuiKey_KeyPadEnter = ImGuiKey_KeypadEnter,              // Renam
 
 :\Users\simon\github\vtkDearImGUIInjector\sample\OverlayUI.cxx(49,52): error C2065:
 'Karla_Regular_compressed_data_base85': undeclared identifier [C:\Users\simon\github\vtkDearImGUIInjector\build\sample\main.vcxproj]
-Move include tow lines earlier so that include is done without spectrum version in use
+Move include two lines earlier so that include is done without spectrum version in use
 C:\Users\simon\github\vtkDearImGUIInjector\build\sample\Debug\main.exe
 ```
 idle sample takes about 16 % of GPU which causes constant fan noise.
