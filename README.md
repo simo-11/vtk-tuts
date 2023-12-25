@@ -129,6 +129,24 @@ Move include two lines earlier so that include is done without spectrum version 
 C:\Users\simon\github\vtkDearImGUIInjector\build\sample\Debug\main.exe
 ```
 idle sample takes about 16 % of GPU which causes constant fan noise.
+added sleeps in mainLoopCallback which lowered gpu usage but fan is still active
+
+Check out unneeded calls based on profiling data
+|Function Name|Total CPU \[unit, %\]|Self CPU \[unit, %\]|Module|
+|-|-|-|-|
+|\| - vtkFreeTypeTools::RenderCharacter|346 \(10,81 %\)|276 \(8,62 %\)|vtkrenderingfreetype-9.3d|
+|\| - vtkAOSDataArrayTemplate\<unsigned char\>::GetTuple|239 \(7,46 %\)|190 \(5,93 %\)|vtkcommoncore-9.3d|
+|\| - \[External Call\]gdi32full.dll0x00007fff4dc8d338|161 \(5,03 %\)|161 \(5,03 %\)|gdi32full|
+|\| - \[External Call\]ucrtbased.dll0x00007ffe7b6d0dee|121 \(3,78 %\)|121 \(3,78 %\)|ucrtbased|
+|\| - vtkFreeTypeTools::RenderBackground|157 \(4,90 %\)|94 \(2,94 %\)|vtkrenderingfreetype-9.3d|
+|\| - vtkTexture::IsTranslucent|611 \(19,08 %\)|88 \(2,75 %\)|vtkrenderingcore-9.3d|
+|\| - \[External Call\]msvcp140d.dll0x00007ffee31edcd6|76 \(2,37 %\)|76 \(2,37 %\)|msvcp140d|
+|\| - \[External Call\]msvcp140d.dll0x00007ffee31edbb5|74 \(2,31 %\)|74 \(2,31 %\)|msvcp140d|
+|\| - gray\_set\_cell|64 \(2,00 %\)|64 \(2,00 %\)|vtkfreetype-9.3d|
+|\| - gray\_render\_line|126 \(3,94 %\)|63 \(1,97 %\)|vtkfreetype-9.3d|
+|\| - \[External Call\]ucrtbased.dll0x00007ffe7b6d0335|58 \(1,81 %\)|58 \(1,81 %\)|ucrtbased|
+|\| - vtkAbstractArray::GetNumberOfTuples|55 \(1,72 %\)|54 \(1,69 %\)|vtkcommoncore-9.3d|
+|\| - \[External Call\]nvoglv64.dll0x00007ffe566d26d0|51 \(1,59 %\)|51 \(1,59 %\)|nvoglv64|
 
 ## Integrate Cuda
 
