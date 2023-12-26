@@ -67,6 +67,25 @@ PS C:\Users\simon\github\vtk-tuts\CylinderExample\build> start CylinderExample.s
      * set Example as startup project
      * start debugging
 
+Having window open does not cause GPU usage
+```
+CylinderExample.exe!`anonymous namespace'::tutCallback::Execute(vtkObject * caller, unsigned long __formal, void * __formal) Line 30
+	at C:\Users\simon\github\vtk-tuts\CylinderExample\CylinderExample.cxx(30)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::OnMouseMove(HWND__ * hWnd, unsigned int nFlags, int X, int Y) Line 477
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(477)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage2(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam, vtkWin32RenderWindowInteractor * me) Line 958
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(958)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam) Line 879
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(879)
+[External Code]
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::StartEventLoop() Line 279
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(279)
+```
+
 
 # Tasks
 
@@ -155,6 +174,41 @@ Window Size 1920x1000, GPU memory size is reflected by window size.
 |  off | on |8| 2-3 | 0 | 251| 
 |  on | on |8| 2-3 | 0 | 257|
 |  on | on |0| 5 | 0 | 145|
+
+tkDearImGuiInjector::PumpEvents makes a busy loop
+```
+main.exe!vtkDearImGuiInjector::BeginDearImGuiOverlay(vtkObject * caller, unsigned long eid, void * callData) Line 242
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(242)
+main.exe!vtkObject::vtkClassMemberCallback<vtkDearImGuiInjector>::operator()(vtkObject * caller, unsigned long event, void * calldata) Line 382
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.h(382)
+vtkCommonCore-9.3d.dll!vtkObjectCommandInternal::Execute(vtkObject * caller, unsigned long eventId, void * callData) Line 944
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(944)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingCore-9.3d.dll!vtkRenderWindow::Render() Line 289
+	at C:\Users\simon\github\vtk\Rendering\Core\vtkRenderWindow.cxx(289)
+vtkRenderingOpenGL2-9.3d.dll!vtkOpenGLRenderWindow::Render() Line 2771
+	at C:\Users\simon\github\vtk\Rendering\OpenGL2\vtkOpenGLRenderWindow.cxx(2771)
+main.exe!`anonymous namespace'::mainLoopCallback(void * arg) Line 536
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(536)
+main.exe!vtkDearImGuiInjector::PumpEvents(vtkObject * caller, unsigned long eid, void * callData) Line 565
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(565)
+main.exe!vtkObject::vtkClassMemberCallback<vtkDearImGuiInjector>::operator()(vtkObject * caller, unsigned long event, void * calldata) Line 382
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.h(382)
+vtkCommonCore-9.3d.dll!vtkObjectCommandInternal::Execute(vtkObject * caller, unsigned long eventId, void * callData) Line 944
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(944)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingCore-9.3d.dll!vtkRenderWindowInteractor::Start() Line 199
+	at C:\Users\simon\github\vtk\Rendering\Core\vtkRenderWindowInteractor.cxx(199)
+main.exe!main(int argc, char * * argv) Line 89
+	at C:\Users\simon\github\vtkDearImGUIInjector\sample\main.cxx(89)
+```
+
 
 ## Integrate Cuda
 
