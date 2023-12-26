@@ -129,7 +129,7 @@ Move include two lines earlier so that include is done without spectrum version 
 C:\Users\simon\github\vtkDearImGUIInjector\build\sample\Debug\main.exe
 ```
 idle sample takes about 16 % of GPU which causes constant fan noise.
-added sleeps in mainLoopCallback which lowered gpu usage but fan is still active
+added sleeps in mainLoopCallback which lowered gpu usage to 2-5 % but fan is still active
 
 Check out unneeded calls based on profiling data
 |Function Name|Total CPU \[unit, %\]|Self CPU \[unit, %\]|Module|
@@ -147,6 +147,14 @@ Check out unneeded calls based on profiling data
 |\| - \[External Call\]ucrtbased.dll0x00007ffe7b6d0335|58 \(1,81 %\)|58 \(1,81 %\)|ucrtbased|
 |\| - vtkAbstractArray::GetNumberOfTuples|55 \(1,72 %\)|54 \(1,69 %\)|vtkcommoncore-9.3d|
 |\| - \[External Call\]nvoglv64.dll0x00007ffe566d26d0|51 \(1,59 %\)|51 \(1,59 %\)|nvoglv64|
+
+Window Size 1920x1000, GPU memory size is reflected by window size.
+
+|camManipulator| imGui | multiSamples | GPU %|CPU %|Committed GPU memory|
+|-|-|-|-|-|-|
+|  off | on |8| 2-3 | 0 | 251| 
+|  on | on |8| 2-3 | 0 | 257|
+|  on | on |0| 5 | 0 | 145|
 
 ## Integrate Cuda
 
