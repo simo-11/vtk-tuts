@@ -246,6 +246,9 @@ GPU usage drops to less than 1 % if there are no events.
 ## Integrate (high performance) math librarues
 
 ### mkl
+
+https://www.intel.com/content/www/us/en/docs/onemkl/code-samples-lapack/2023-1/overview.html
+
 ```
 nuget install intelmkl.devel.win-x64
 > dir C:\Users\simon\nuget dir C:\Users\simon\.nuget\packages\
