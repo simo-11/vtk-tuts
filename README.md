@@ -241,7 +241,7 @@ main.exe!`anonymous namespace'::mainLoopCallback(void * arg) Line 533
 ```
 
 Added condition to call render only if event-processing takes at least 1 ms to vtkDearImGuiInjector.cxx#mainLoopCallback.
-GPU usage drops to less that 1 % if there are no events.
+GPU usage drops to less than 1 % if there are no events.
 
 ## Integrate (high performance) math librarues
 
