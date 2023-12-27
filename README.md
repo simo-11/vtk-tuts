@@ -67,6 +67,25 @@ PS C:\Users\simon\github\vtk-tuts\CylinderExample\build> start CylinderExample.s
      * set Example as startup project
      * start debugging
 
+Having window open does not cause GPU usage
+```
+CylinderExample.exe!`anonymous namespace'::tutCallback::Execute(vtkObject * caller, unsigned long __formal, void * __formal) Line 30
+	at C:\Users\simon\github\vtk-tuts\CylinderExample\CylinderExample.cxx(30)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::OnMouseMove(HWND__ * hWnd, unsigned int nFlags, int X, int Y) Line 477
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(477)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage2(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam, vtkWin32RenderWindowInteractor * me) Line 958
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(958)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam) Line 879
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(879)
+[External Code]
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::StartEventLoop() Line 279
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(279)
+```
+
 
 # Tasks
 
@@ -114,7 +133,7 @@ High performance Nvidia RTX
        * set(IMGUI_DIR /users/simon/github/imgui) 
  * https://github.com/simo-11/imgui
 
-Start visual studio x64 Native tools command propmt 
+Start visual studio x64 Native tools command prompt 
 ```
 C:\Users\simon\github\vtkDearImGUIInjector>cmake "-DVTK_DIR=/users/simon/build/vtk"  -S . -B build
 C:\Users\simon\github\vtkDearImGUIInjector>cmake --build build
@@ -129,7 +148,7 @@ Move include two lines earlier so that include is done without spectrum version 
 C:\Users\simon\github\vtkDearImGUIInjector\build\sample\Debug\main.exe
 ```
 idle sample takes about 16 % of GPU which causes constant fan noise.
-added sleeps in mainLoopCallback which lowered gpu usage but fan is still active
+added sleeps in mainLoopCallback which lowered gpu usage to 2-5 % but fan is still active
 
 Check out unneeded calls based on profiling data
 |Function Name|Total CPU \[unit, %\]|Self CPU \[unit, %\]|Module|
@@ -148,6 +167,129 @@ Check out unneeded calls based on profiling data
 |\| - vtkAbstractArray::GetNumberOfTuples|55 \(1,72 %\)|54 \(1,69 %\)|vtkcommoncore-9.3d|
 |\| - \[External Call\]nvoglv64.dll0x00007ffe566d26d0|51 \(1,59 %\)|51 \(1,59 %\)|nvoglv64|
 
-## Integrate Cuda
+Window Size 1920x1000, GPU memory size is reflected by window size.
+
+|camManipulator| imGui | multiSamples | GPU %|CPU %|Committed GPU memory|
+|-|-|-|-|-|-|
+|  off | on |8| 2-3 | 0 | 251| 
+|  on | on |8| 2-3 | 0 | 257|
+|  on | on |0| 5 | 0 | 145|
+
+tkDearImGuiInjector::PumpEvents makes a busy loop
+```
+main.exe!vtkDearImGuiInjector::BeginDearImGuiOverlay(vtkObject * caller, unsigned long eid, void * callData) Line 242
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(242)
+main.exe!vtkObject::vtkClassMemberCallback<vtkDearImGuiInjector>::operator()(vtkObject * caller, unsigned long event, void * calldata) Line 382
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.h(382)
+vtkCommonCore-9.3d.dll!vtkObjectCommandInternal::Execute(vtkObject * caller, unsigned long eventId, void * callData) Line 944
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(944)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingCore-9.3d.dll!vtkRenderWindow::Render() Line 289
+	at C:\Users\simon\github\vtk\Rendering\Core\vtkRenderWindow.cxx(289)
+vtkRenderingOpenGL2-9.3d.dll!vtkOpenGLRenderWindow::Render() Line 2771
+	at C:\Users\simon\github\vtk\Rendering\OpenGL2\vtkOpenGLRenderWindow.cxx(2771)
+main.exe!`anonymous namespace'::mainLoopCallback(void * arg) Line 536
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(536)
+main.exe!vtkDearImGuiInjector::PumpEvents(vtkObject * caller, unsigned long eid, void * callData) Line 565
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(565)
+main.exe!vtkObject::vtkClassMemberCallback<vtkDearImGuiInjector>::operator()(vtkObject * caller, unsigned long event, void * calldata) Line 382
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.h(382)
+vtkCommonCore-9.3d.dll!vtkObjectCommandInternal::Execute(vtkObject * caller, unsigned long eventId, void * callData) Line 944
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(944)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingCore-9.3d.dll!vtkRenderWindowInteractor::Start() Line 199
+	at C:\Users\simon\github\vtk\Rendering\Core\vtkRenderWindowInteractor.cxx(199)
+main.exe!main(int argc, char * * argv) Line 89
+	at C:\Users\simon\github\vtkDearImGUIInjector\sample\main.cxx(89)
+```
+
+Events are handled like this
+```
+main.exe!vtkDearImGuiInjector::InterceptEvent(vtkObject * caller, unsigned long eid, void * clientData, void * callData) Line 572
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(572)
+vtkCommonCore-9.3d.dll!vtkCallbackCommand::Execute(vtkObject * caller, unsigned long event, void * callData) Line 31
+	at C:\Users\simon\github\vtk\Common\Core\vtkCallbackCommand.cxx(31)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingCore-9.3d.dll!vtkInteractorStyle::ProcessEvents(vtkObject * __formal, unsigned long event, void * clientdata, void * calldata) Line 1083
+	at C:\Users\simon\github\vtk\Rendering\Core\vtkInteractorStyle.cxx(1083)
+vtkCommonCore-9.3d.dll!vtkCallbackCommand::Execute(vtkObject * caller, unsigned long event, void * callData) Line 31
+	at C:\Users\simon\github\vtk\Common\Core\vtkCallbackCommand.cxx(31)
+vtkCommonCore-9.3d.dll!vtkSubjectHelper::InvokeEvent(unsigned long event, void * callData, vtkObject * self) Line 641
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(641)
+vtkCommonCore-9.3d.dll!vtkObject::InvokeEvent(unsigned long event, void * callData) Line 807
+	at C:\Users\simon\github\vtk\Common\Core\vtkObject.cxx(807)
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::OnMouseMove(HWND__ * hWnd, unsigned int nFlags, int X, int Y) Line 487
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(487)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage2(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam, vtkWin32RenderWindowInteractor * me) Line 958
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(958)
+vtkRenderingUI-9.3d.dll!vtkHandleMessage(HWND__ * hWnd, unsigned int uMsg, unsigned __int64 wParam, __int64 lParam) Line 879
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(879)
+[External Code]
+vtkRenderingUI-9.3d.dll!vtkWin32RenderWindowInteractor::ProcessEvents() Line 260
+	at C:\Users\simon\github\vtk\Rendering\UI\vtkWin32RenderWindowInteractor.cxx(260)
+main.exe!`anonymous namespace'::mainLoopCallback(void * arg) Line 533
+	at C:\Users\simon\github\vtkDearImGUIInjector\src\vtkDearImGuiInjector.cxx(533)
+```
+
+Added condition to call render only if event-processing takes at least 1 ms to vtkDearImGuiInjector.cxx#mainLoopCallback.
+GPU usage drops to less that 1 % if there are no events.
+
+## Integrate (high performance) math librarues
+
+### mkl
+```
+nuget install intelmkl.devel.win-x64
+> dir C:\Users\simon\nuget dir C:\Users\simon\.nuget\packages\
+C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\build\native\include\ intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64\native\
+```
+
+### Cuda
+ * https://docs.nvidia.com/cuda/cusolver/index.html
+```
+Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3 $ ls bin/cusolver64_11.dll include/*cusolver*
+bin/cusolver64_11.dll*  include/cusolverMg.h  include/cusolverSp.h                   include/cusolver_common.h
+include/cusolverDn.h    include/cusolverRf.h  include/cusolverSp_LOWLEVEL_PREVIEW.h
+```
+  
+### initial tests with lapacke
+https://icl.utk.edu/lapack-for-windows/lapack/index.html#lapacke
+
+```
+C:\Users\simon\build\LAPACKE_examples\Release> dir
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          26/12/2023    21.30         439942 libblas.dll
+-a---          26/12/2023    21.30         107520 libgcc_s_dw2-1.dll
+-a---          26/12/2023    21.30         802318 libgfortran-3.dll
+-a---          26/12/2023    21.30        5983228 liblapack.dll
+-a---          26/12/2023    21.30        2104615 liblapacke.dll
+C:\Users\simon\build\LAPACKE_examples\Release> C:\Users\simon\build\LAPACKE_examples\Debug\example_DGESV_rowmajor.exe
+
+C:\Users\simon\build\LAPACKE_examples\include> dir
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          26/12/2023    21.30           4235 lapacke_config.h
+-a---          26/12/2023    21.30            474 lapacke_mangling.h
+-a---          26/12/2023    21.30          32375 lapacke_utils.h
+-a---          26/12/2023    21.30        1061210 lapacke.h
+C:\Users\simon\build\LAPACKE_examples\lib> dir
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          26/12/2023    21.30         439942 libblas.dll
+-a---          26/12/2023    21.30          25800 libblas.lib
+-a---          26/12/2023    21.30        5983228 liblapack.dll
+-a---          26/12/2023    21.30         261136 liblapack.lib
+-a---          26/12/2023    21.30        2104615 liblapacke.dll
+-a---          26/12/2023    21.30         457926 liblapacke.lib
+```
 
 
