@@ -247,7 +247,8 @@ GPU usage drops to less than 1 % if there are no events.
 
 ### mkl
 
-https://www.intel.com/content/www/us/en/docs/onemkl/code-samples-lapack/2023-1/overview.html
+ * https://www.intel.com/content/www/us/en/docs/onemkl/developer-guide-windows/2023-1/overview.html
+ * https://www.intel.com/content/www/us/en/docs/onemkl/code-samples-lapack/2023-1/overview.html
 
 ```
 nuget install intelmkl.devel.win-x64
