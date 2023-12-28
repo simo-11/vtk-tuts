@@ -72,6 +72,9 @@
  Pivot indices
       5      5      3      4      5
 */
+/*
+Modified for vtk-tuts
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include "mkl_lapacke.h"
@@ -86,8 +89,10 @@ extern void print_int_vector(char* desc, MKL_INT n, MKL_INT* a);
 #define LDA N
 #define LDB NRHS
 
-/* Main program */
-int main() {
+/* 
+@return info from LAPACKE_sgesv
+*/
+int LapackSgesv(bool printSolution) {
     /* Locals */
     MKL_INT n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
     /* Local arrays */
@@ -107,24 +112,30 @@ int main() {
        -3.03f,  2.86f, 8.99f
     };
     /* Executable statements */
-    printf("LAPACKE_sgesv (row-major, high-level) Example Program Results\n");
+    if (printSolution) {
+        printf("LAPACKE_sgesv (row-major, high-level) Example Program Results\n");
+    }
     /* Solve the equations A*X = B */
     info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv,
         b, ldb);
     /* Check for the exact singularity */
     if (info > 0) {
-        printf("The diagonal element of the triangular factor of A,\n");
-        printf("U(%i,%i) is zero, so that A is singular;\n", info, info);
-        printf("the solution could not be computed.\n");
-        exit(1);
+        if (printSolution) {
+            printf("The diagonal element of the triangular factor of A,\n");
+            printf("U(%i,%i) is zero, so that A is singular;\n", info, info);
+            printf("the solution could not be computed.\n");
+        }
+        return info;
     }
-    /* Print solution */
-    print_matrix("Solution", n, nrhs, b, ldb);
-    /* Print details of LU factorization */
-    print_matrix("Details of LU factorization", n, n, a, lda);
-    /* Print pivot indices */
-    print_int_vector("Pivot indices", n, ipiv);
-    exit(0);
+    if (printSolution) {
+        /* Print solution */
+        print_matrix("Solution", n, nrhs, b, ldb);
+        /* Print details of LU factorization */
+        print_matrix("Details of LU factorization", n, n, a, lda);
+        /* Print pivot indices */
+        print_int_vector("Pivot indices", n, ipiv);
+    }
+    return 0;
 } /* End of LAPACKE_sgesv Example */
 
 /* Auxiliary routine: printing a matrix */

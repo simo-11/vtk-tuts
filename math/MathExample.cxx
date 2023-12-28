@@ -11,10 +11,13 @@
 #include <windows.h>
 #include <gl/GL.h>
 
+#include <chrono>
+#include <thread>
+#include <string>
 #include <array>
 #include <sstream>
 #include <vtkWin32OpenGLRenderWindow.h>
-
+extern int LapackSgesv(bool printSolution);
 namespace {
     static const char* windowTitle=nullptr;
     // Callback for the interaction.
@@ -58,6 +61,29 @@ namespace {
         }
         tutCallback() = default;
     };
+    static int callCount;
+    class mathCallback : public vtkCommand
+    {
+    public:
+        static mathCallback* New()
+        {
+            return new mathCallback;
+        }
+        void Execute(vtkObject* caller, unsigned long, void*) override
+        {
+            std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+            LapackSgesv(callCount>0);
+            callCount++;
+            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+            long elapsedUs = std::chrono::duration_cast
+                <std::chrono::microseconds>(end - start).count();
+            std::clog << "Call #"<<callCount<< "LapackSgesv took "
+                << elapsedUs << "us" << std::endl;
+
+        }
+        mathCallback() = default;
+    };
+
 } // namespace
 
 int main(int, char*[])
@@ -113,6 +139,9 @@ int main(int, char*[])
   unsigned long event=vtkCommand::EnterEvent;
   vtkNew<tutCallback> cb;
   renderWindowInteractor->AddObserver(event, cb);
+  vtkNew<mathCallback> mathCb;
+  renderWindowInteractor->AddObserver
+  (vtkCommand::MouseMoveEvent, mathCb);
 
   // This starts the event loop and as a side effect causes an initial render.
   renderWindow->Render();

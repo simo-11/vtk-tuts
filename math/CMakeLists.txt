@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 file(GLOB MKL_INC_DIR c:/users/simon/nuget/intelmkl.devel*/build/*/include)
 file(GLOB MKL_LIB_DIR c:/users/simon/nuget/intelmkl.devel*/run*/*/native)
-message(INFO "MKL_LIB_DIR=${MKL_LIB_DIR}")
+message("MKL_LIB_DIR=${MKL_LIB_DIR}")
 
 project(MathExample)
 
@@ -27,6 +27,11 @@ set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response
 add_executable(MathExample MACOSX_BUNDLE MathExample.cxx LapackSgesv.cxx)
   target_link_libraries(MathExample PRIVATE 
   ${VTK_LIBRARIES}
+${MKL_LIB_DIR}/mkl_core_dll.lib
+${MKL_LIB_DIR}/mkl_intel_ilp64_dll.lib
+${MKL_LIB_DIR}/mkl_intel_lp64_dll.lib
+${MKL_LIB_DIR}/mkl_intel_thread_dll.lib
+${MKL_LIB_DIR}/mkl_rt.lib
 )
 target_include_directories(MathExample PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
