@@ -243,7 +243,7 @@ main.exe!`anonymous namespace'::mainLoopCallback(void * arg) Line 533
 Added condition to call render only if event-processing takes at least 1 ms to vtkDearImGuiInjector.cxx#mainLoopCallback.
 GPU usage drops to less than 1 % if there are no events.
 
-## Integrate (high performance) math librarues
+## Integrate (high performance) math libraries
 
 ### mkl
 
@@ -252,7 +252,8 @@ https://www.intel.com/content/www/us/en/docs/onemkl/code-samples-lapack/2023-1/o
 ```
 nuget install intelmkl.devel.win-x64
 > dir C:\Users\simon\nuget dir C:\Users\simon\.nuget\packages\
-C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\build\native\include\ intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64\native\
+C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\build\native\include\
+C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64\native\
 ```
 
 ### Cuda
