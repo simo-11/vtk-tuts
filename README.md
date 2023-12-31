@@ -263,11 +263,6 @@ Tunings
  * CMakeLists.txt tuning
    * make target hot reloadble as default - https://cmake.org/cmake/help/latest/variable/CMAKE_MSVC_DEBUG_INFORMATION_FORMAT.html
 
-TODO
- * CMakeLists.txt tuning
-   * target_include_directories in proper way, now is hardcoded
- * optionally call netlib version   
-
 ```
 'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_intel_thread.2.dll'. Module was built without symbols.
 
@@ -290,10 +285,24 @@ PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports mkl_core
 
 ### Cuda
  * https://docs.nvidia.com/cuda/cusolver/index.html
+ * https://github.com/NVIDIA/CUDALibrarySamples
 ```
 Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3 $ ls bin/cusolver64_11.dll include/*cusolver*
 bin/cusolver64_11.dll*  include/cusolverMg.h  include/cusolverSp.h                   include/cusolver_common.h
 include/cusolverDn.h    include/cusolverRf.h  include/cusolverSp_LOWLEVEL_PREVIEW.h
+```
+
+```
+C:\Users\simon\github> git clone https://github.com/NVIDIA/CUDALibrarySamples
+CUDALibrarySamples\cuSOLVER\gesv\build [master ≡]> cmake -DCMAKE_GENERATOR_PLATFORM=x64 ..
+CUDALibrarySamples\cuSOLVER\gesv\build [master ≡]> cmake --build .
+CUDALibrarySamples\cuSOLVER\gesv\build [master ≡]> C:\Users\simon\github\CUDALibrarySamples\cuSOLVER\gesv\build\Debug\cusolver_irs_expert.exe
+...
+Workspace is 12609152 bytes
+Solving matrix on device...
+Solve info is: 0, iter is: 2
+Solved matrix 1024x1024 with 1 right hand sides in 73.6532ms
+CUDALibrarySamples\cuSOLVER\gesv\build [master ≡]> start cusolver_examples.sln
 ```
   
 ### initial tests with lapacke
