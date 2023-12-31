@@ -256,6 +256,15 @@ nuget install intelmkl.devel.win-x64
 C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\build\native\include\
 C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64\native\
 ```
+#### MathExample
+Calls lapacke Sgesv on mouse move. 
+
+TODO
+ * CMakeLists.txt tuning
+   * target_include_directories in proper way, now is hardcoded
+   * make target hot reloadble as default
+ * optionally call netlib version   
+
 
 ### Cuda
  * https://docs.nvidia.com/cuda/cusolver/index.html
