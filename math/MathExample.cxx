@@ -72,13 +72,13 @@ namespace {
         void Execute(vtkObject* caller, unsigned long, void*) override
         {
             std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-            LapackSgesv(callCount>0);
+            LapackSgesv(callCount<1);
             callCount++;
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             long elapsedUs = std::chrono::duration_cast
                 <std::chrono::microseconds>(end - start).count();
-            std::clog << "Call #"<<callCount<< "LapackSgesv took "
-                << elapsedUs << "us" << std::endl;
+            std::clog << "Call #"<<callCount<< " LapackSgesv took "
+                << elapsedUs << " us" << std::endl;
 
         }
         mathCallback() = default;
