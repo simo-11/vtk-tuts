@@ -259,12 +259,34 @@ C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64
 #### MathExample
 Calls lapacke Sgesv on mouse move. 
 
+Tunings
+ * CMakeLists.txt tuning
+   * make target hot reloadble as default - https://cmake.org/cmake/help/latest/variable/CMAKE_MSVC_DEBUG_INFORMATION_FORMAT.html
+
 TODO
  * CMakeLists.txt tuning
    * target_include_directories in proper way, now is hardcoded
-   * make target hot reloadble as default
  * optionally call netlib version   
 
+```
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_intel_thread.2.dll'. Module was built without symbols.
+
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_core.2.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_avx2.2.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_vml_avx2.2.dll'. Module was built without symbols.
+```
+https://learn.microsoft.com/en-us/cpp/build/reference/dumpbin-reference?view=msvc-170
+```
+PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports .\mkl_intel_thread.2.dll  | findstr sgesv
+       1956  7A3 01EEAE70 mkl_lapack_sgesv
+
+PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports mkl_core.2.dll  | findstr sgesv
+       2417  970 007B1280 mkl_lapack_dsgesv
+```
 
 ### Cuda
  * https://docs.nvidia.com/cuda/cusolver/index.html
