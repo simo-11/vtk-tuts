@@ -77,6 +77,7 @@ Modified for vtk-tuts
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include "MathExample.h"
 #include "mkl_lapacke.h"
 
 /* Auxiliary routines prototypes */
@@ -92,9 +93,9 @@ extern void print_int_vector(char* desc, MKL_INT n, MKL_INT* a);
 /* 
 @return info from LAPACKE_sgesv
 */
-int LapackSgesv(bool printSolution) {
+int LapackSgesv(bool printSolution, LapackImpl lapackImpl) {
     /* Locals */
-    MKL_INT n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
+    MKL_INT n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info=0;
     /* Local arrays */
     MKL_INT ipiv[N];
     float a[LDA * N] = {
@@ -116,8 +117,13 @@ int LapackSgesv(bool printSolution) {
         printf("LAPACKE_sgesv (row-major, high-level) Example Program Results\n");
     }
     /* Solve the equations A*X = B */
-    info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv,
-        b, ldb);
+    switch (lapackImpl) {
+    case netlib:
+    case mkl:
+        info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv,
+            b, ldb);
+        break;
+    }
     /* Check for the exact singularity */
     if (info > 0) {
         if (printSolution) {

@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.28)
 #${MKL_LIB_DIR}/mkl_intel_lp64_dll.lib
 #${MKL_LIB_DIR}/mkl_intel_thread_dll.lib
 #${MKL_LIB_DIR}/mkl_rt.lib
-
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>")
 project(MathExample)
 
 find_package(VTK COMPONENTS 

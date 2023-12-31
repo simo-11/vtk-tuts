@@ -17,7 +17,7 @@
 #include <array>
 #include <sstream>
 #include <vtkWin32OpenGLRenderWindow.h>
-extern int LapackSgesv(bool printSolution);
+#include "MathExample.h"
 namespace {
     static const char* windowTitle=nullptr;
     // Callback for the interaction.
@@ -72,12 +72,27 @@ namespace {
         void Execute(vtkObject* caller, unsigned long, void*) override
         {
             std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-            LapackSgesv(callCount<1);
+            LapackImpl lapackImpl;
+            char* lapackImpls;
+            switch (callCount % 2) {
+            default: /* currently always mkl */
+            case 0: 
+                lapackImpl = mkl;
+                lapackImpls = "mkl";
+                break;
+                /*
+            case 1:
+                lapackImpl = netlib;
+                lapackImpls = "netlib";
+                break;
+                */
+            }
+            LapackSgesv(callCount<1,lapackImpl);
             callCount++;
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             long elapsedUs = std::chrono::duration_cast
                 <std::chrono::microseconds>(end - start).count();
-            std::clog << "Call #"<<callCount<< " LapackSgesv took "
+            std::clog << "Call #"<<callCount<< " LapackSgesv("<<lapackImpls<<") took "
                 << elapsedUs << " us" << std::endl;
 
         }
