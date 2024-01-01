@@ -72,28 +72,26 @@ namespace {
         void Execute(vtkObject* caller, unsigned long, void*) override
         {
             std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-            LapackImpl lapackImpl;
-            char* lapackImpls;
+            SolverImpl solverImpl;
+            char* solverName;
             switch (callCount % 2) {
-            default: /* currently always mkl */
-            case 0: 
-                lapackImpl = mkl;
-                lapackImpls = "mkl";
+            default: 
+                solverImpl = mkl;
+                solverName = "mkl";
                 break;
-                /*
             case 1:
-                lapackImpl = netlib;
-                lapackImpls = "netlib";
+                solverImpl = cuda;
+                solverName = "cuda";
                 break;
-                */
             }
-            LapackSgesv(callCount<1,lapackImpl);
+            int n = callCount / 2 + 5;
+            MathSolve(callCount<2?1:0,solverImpl,n);
             callCount++;
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             long elapsedUs = std::chrono::duration_cast
                 <std::chrono::microseconds>(end - start).count();
-            std::clog << "Call #"<<callCount<< " LapackSgesv("<<lapackImpls<<") took "
-                << elapsedUs << " us" << std::endl;
+            std::clog << "Call #"<<callCount<< " to MathSolve("<<solverName<<") took "
+                << elapsedUs << " us, n="<<n<< std::endl;
 
         }
         mathCallback() = default;

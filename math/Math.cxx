@@ -77,87 +77,203 @@ Modified for vtk-tuts
 */
 #include <stdlib.h>
 #include <stdio.h>
+#define CUBLASAPI
+#include "cusolver_utils.h"
 #include "MathExample.h"
-#include "mkl_lapacke.h"
 
-/* Auxiliary routines prototypes */
-extern void print_matrix(char* desc, MKL_INT m, MKL_INT n, float* a, MKL_INT lda);
-extern void print_int_vector(char* desc, MKL_INT n, MKL_INT* a);
-
-/* Parameters */
-#define N 5
-#define NRHS 3
-#define LDA N
-#define LDB NRHS
-
-/* 
-@return info from LAPACKE_sgesv
-*/
-int LapackSgesv(bool printSolution, LapackImpl lapackImpl) {
-    /* Locals */
-    MKL_INT n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info=0;
-    /* Local arrays */
-    MKL_INT ipiv[N];
-    float a[LDA * N] = {
-        6.80f, -6.05f, -0.45f,  8.32f, -9.67f,
-       -2.11f, -3.30f,  2.58f,  2.71f, -5.14f,
-        5.66f, 5.36f, -2.70f,  4.35f, -7.26f,
-        5.97f, -4.44f,  0.27f, -7.17f, 6.08f,
-        8.23f, 1.08f,  9.04f,  2.14f, -6.87f
-    };
-    float b[LDB * N] = {
-        4.02f, -1.56f, 9.81f,
-        6.19f,  4.00f, -4.09f,
-       -8.22f, -8.67f, -4.57f,
-       -7.57f,  1.75f, -8.61f,
-       -3.03f,  2.86f, 8.99f
-    };
-    /* Executable statements */
-    if (printSolution) {
-        printf("LAPACKE_sgesv (row-major, high-level) Example Program Results\n");
-    }
-    /* Solve the equations A*X = B */
-    switch (lapackImpl) {
-    case netlib:
-    case mkl:
-        info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv,
-            b, ldb);
-        break;
-    }
-    /* Check for the exact singularity */
-    if (info > 0) {
-        if (printSolution) {
-            printf("The diagonal element of the triangular factor of A,\n");
-            printf("U(%i,%i) is zero, so that A is singular;\n", info, info);
-            printf("the solution could not be computed.\n");
+namespace vtk_tuts {
+    /* Auxiliary routine: printing a matrix */
+    static void print_float_matrix(char* desc, int m, int n, float* a, int lda) {
+        int i, j;
+        printf("\n %s\n", desc);
+        for (i = 0; i < m; i++) {
+            for (j = 0; j < n; j++) printf(" %6.2f", a[i * lda + j]);
+            printf("\n");
         }
-        return info;
     }
-    if (printSolution) {
-        /* Print solution */
-        print_matrix("Solution", n, nrhs, b, ldb);
-        /* Print details of LU factorization */
-        print_matrix("Details of LU factorization", n, n, a, lda);
-        /* Print pivot indices */
-        print_int_vector("Pivot indices", n, ipiv);
-    }
-    return 0;
-} /* End of LAPACKE_sgesv Example */
 
-/* Auxiliary routine: printing a matrix */
-void print_matrix(char* desc, MKL_INT m, MKL_INT n, float* a, MKL_INT lda) {
-    MKL_INT i, j;
-    printf("\n %s\n", desc);
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) printf(" %6.2f", a[i * lda + j]);
+    /* Auxiliary routine: printing a vector of integers */
+    static void print_int_vector(char* desc, int n, int* a) {
+        int j;
+        printf("\n %s\n", desc);
+        for (j = 0; j < n; j++) printf(" %6i", a[j]);
         printf("\n");
     }
+    static float* getRandomA(int n) {
+        float* a;
+        int lda;
+        if (n == 5) {
+            float src[5 * 5] = {
+                6.80f, -6.05f, -0.45f,  8.32f, -9.67f,
+               -2.11f, -3.30f,  2.58f,  2.71f, -5.14f,
+                5.66f, 5.36f, -2.70f,  4.35f, -7.26f,
+                5.97f, -4.44f,  0.27f, -7.17f, 6.08f,
+                8.23f, 1.08f,  9.04f,  2.14f, -6.87f
+            };
+            size_t size = 5 * 5 * sizeof(float);
+            a = (float*)malloc(size);
+            if (a!=nullptr) {
+                memcpy(a, src, size);
+            }
+        }
+        else {
+            generate_random_matrix<float>(n, n, &a, &lda);
+            make_diag_dominant_matrix<float>(n, n, a, lda);
+        }
+        return a;
+    }
+    static float* getRandomB(int n) {
+        float* b;
+        int ldb;
+        if (n == 5) {
+            float src[5] = {
+                4.02f,
+                6.19f,
+               -8.22f,
+               -7.57f,
+               -3.03f,
+            };
+            size_t size = 5 * 5 * sizeof(float);
+            b = (float*)malloc(size);
+            memcpy(b, src, size);
+        }
+        else {
+            generate_random_matrix<float>(n, 1, &b, &ldb);
+        }
+        return b;
+    }
+}
+/*
+@return info from solver
+*/
+int MathSolve(int verbose, SolverImpl impl, int n) {
+    float *a= vtk_tuts::getRandomA(n);
+    float *b= vtk_tuts::getRandomB(n);
+    int* ipiv = (int *)malloc(n * sizeof(float));
+    int info = 0;
+    /* Solve the equations A*X = B */
+    switch (impl) {
+    case mkl:
+        info = lapack_solve(verbose, n, a, b, ipiv);
+        break;
+    case cuda:
+        info = cuda_solve(verbose, n, a, b, ipiv);
+    }
+    if (n == 5) {
+        float expected[5] = { -0.80,-0.70,0.59,1.32,0.57 };
+        for (int i = 0; i < 5; i++) {
+            float rd = b[i] / expected[i];
+            if (rd < 0.99 || rd>1.01) {
+                printf("Solution failed, for %i expected %4.2f but got %4.2f\n",
+                    i,expected[i], b[i]);
+                info = 99;
+                break;
+            }
+        }
+    }
+    if (verbose && n<11) {
+        /* Print solution */
+        vtk_tuts::print_float_matrix("Solution", n, 1, b, 1);
+        /* Print details of LU factorization */
+        vtk_tuts::print_float_matrix("Details of LU factorization", n, n, a, n);
+        /* Print pivot indices */
+        vtk_tuts::print_int_vector("Pivot indices", n, ipiv);
+    }
+    free(a);
+    free(b);
+    free(ipiv);
+    return info;
+}
+/**
+* moved from cusolver_utils.h to avoid LNK2005
+*/
+template <> void print_matrix(const int& m, const int& n, const float* A, const int& lda) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::printf("%0.2f ", A[j * lda + i]);
+        }
+        std::printf("\n");
+    }
 }
 
-/* Auxiliary routine: printing a vector of integers */
-void print_int_vector(char* desc, MKL_INT n, MKL_INT* a) {
-    MKL_INT j;
-    printf("\n %s\n", desc);
-    for (j = 0; j < n; j++) printf(" %6i", a[j]);
-    printf("\n");
+template <> void print_matrix(const int& m, const int& n, const double* A, const int& lda) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::printf("%0.2f ", A[j * lda + i]);
+        }
+        std::printf("\n");
+    }
 }
+
+template <> void print_matrix(const int& m, const int& n, const cuComplex* A, const int& lda) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::printf("%0.2f + %0.2fj ", A[j * lda + i].x, A[j * lda + i].y);
+        }
+        std::printf("\n");
+    }
+}
+
+template <>
+void print_matrix(const int& m, const int& n, const cuDoubleComplex* A, const int& lda) {
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::printf("%0.2f + %0.2fj ", A[j * lda + i].x, A[j * lda + i].y);
+        }
+        std::printf("\n");
+    }
+}
+
+// Returns cudaDataType value as defined in library_types.h for the string containing type name
+cudaDataType get_cuda_library_type(std::string type_string) {
+    if (type_string.compare("CUDA_R_16F") == 0)
+        return CUDA_R_16F;
+    else if (type_string.compare("CUDA_C_16F") == 0)
+        return CUDA_C_16F;
+    else if (type_string.compare("CUDA_R_32F") == 0)
+        return CUDA_R_32F;
+    else if (type_string.compare("CUDA_C_32F") == 0)
+        return CUDA_C_32F;
+    else if (type_string.compare("CUDA_R_64F") == 0)
+        return CUDA_R_64F;
+    else if (type_string.compare("CUDA_C_64F") == 0)
+        return CUDA_C_64F;
+    else if (type_string.compare("CUDA_R_8I") == 0)
+        return CUDA_R_8I;
+    else if (type_string.compare("CUDA_C_8I") == 0)
+        return CUDA_C_8I;
+    else if (type_string.compare("CUDA_R_8U") == 0)
+        return CUDA_R_8U;
+    else if (type_string.compare("CUDA_C_8U") == 0)
+        return CUDA_C_8U;
+    else if (type_string.compare("CUDA_R_32I") == 0)
+        return CUDA_R_32I;
+    else if (type_string.compare("CUDA_C_32I") == 0)
+        return CUDA_C_32I;
+    else if (type_string.compare("CUDA_R_32U") == 0)
+        return CUDA_R_32U;
+    else if (type_string.compare("CUDA_C_32U") == 0)
+        return CUDA_C_32U;
+    else
+        throw std::runtime_error("Unknown CUDA datatype");
+}
+
+// Returns cusolverIRSRefinement_t value as defined in cusolver_common.h for the string containing
+// solver name
+cusolverIRSRefinement_t get_cusolver_refinement_solver(std::string solver_string) {
+    if (solver_string.compare("CUSOLVER_IRS_REFINE_NONE") == 0)
+        return CUSOLVER_IRS_REFINE_NONE;
+    else if (solver_string.compare("CUSOLVER_IRS_REFINE_CLASSICAL") == 0)
+        return CUSOLVER_IRS_REFINE_CLASSICAL;
+    else if (solver_string.compare("CUSOLVER_IRS_REFINE_GMRES") == 0)
+        return CUSOLVER_IRS_REFINE_GMRES;
+    else if (solver_string.compare("CUSOLVER_IRS_REFINE_CLASSICAL_GMRES") == 0)
+        return CUSOLVER_IRS_REFINE_CLASSICAL_GMRES;
+    else if (solver_string.compare("CUSOLVER_IRS_REFINE_GMRES_GMRES") == 0)
+        return CUSOLVER_IRS_REFINE_GMRES_GMRES;
+    else
+        printf("Unknown solver parameter: \"%s\"\n", solver_string.c_str());
+
+    return CUSOLVER_IRS_REFINE_NOT_SET;
+}
+
