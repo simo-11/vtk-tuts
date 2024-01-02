@@ -286,6 +286,7 @@ PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports mkl_core
 ### Cuda
  * https://docs.nvidia.com/cuda/cusolver/index.html
  * https://github.com/NVIDIA/CUDALibrarySamples
+ * https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
 ```
 Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3 $ ls bin/cusolver64_11.dll include/*cusolver*
 bin/cusolver64_11.dll*  include/cusolverMg.h  include/cusolverSp.h                   include/cusolver_common.h
