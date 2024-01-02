@@ -36,7 +36,7 @@
 
 #include "cusolver_utils.h"
 
-int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
+int cuda_solve(int verbose, int n, float* a, float* b, int*) {
     // Numer of right hand sides
     const int nrhs = 1;
 
@@ -53,7 +53,7 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     T *hA=a;
     cusolver_int_t lda=n;
     T *hB=b;
-    cusolver_int_t ldb=1;
+    cusolver_int_t ldb=n;
     T *hX=(T*)malloc(n*n*sizeof(T));
     cusolver_int_t ldx=n;
 
@@ -93,9 +93,6 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     // solution on device
     T *dX;
     cusolver_int_t lddx = ALIGN_TO(n * sizeof(T), device_alignment) / sizeof(T);
-
-    // pivot sequence on device
-    cusolver_int_t *dipiv;
     // info indicator on device
     cusolver_int_t *dinfo;
     // work buffer
@@ -111,14 +108,20 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     CUDA_CHECK(cudaMalloc(&dA, ldda * n * sizeof(T)));
     CUDA_CHECK(cudaMalloc(&dB, lddb * nrhs * sizeof(T)));
     CUDA_CHECK(cudaMalloc(&dX, lddx * nrhs * sizeof(T)));
-    CUDA_CHECK(cudaMalloc(&dipiv, n * sizeof(cusolver_int_t)));
     CUDA_CHECK(cudaMalloc(&dinfo, sizeof(cusolver_int_t)));
 
     // copy input data
-    CUDA_CHECK(cudaMemcpy2D(dA, ldda * sizeof(T), hA, lda * sizeof(T), n * sizeof(T), n,
-                            cudaMemcpyDefault));
-    CUDA_CHECK(cudaMemcpy2D(dB, lddb * sizeof(T), hB, ldb * sizeof(T), n * sizeof(T), nrhs,
-                            cudaMemcpyDefault));
+    size_t dpitch = ldda * sizeof(T);
+    size_t spitch = lda * sizeof(T);
+    size_t width = n * sizeof(T);
+    size_t height = n;
+    CUDA_CHECK(cudaMemcpy2D(dA, dpitch, hA, spitch, width, height,
+        cudaMemcpyDefault));
+    dpitch = lddb * sizeof(T);
+    spitch = ldb * sizeof(T);
+    height = nrhs;
+    CUDA_CHECK(cudaMemcpy2D(dB, dpitch, hB, spitch, width,height,
+        cudaMemcpyDefault));
 
     // get required device work buffer size
     CUSOLVER_CHECK(cusolverDnIRSXgesv_bufferSize(handle, gesv_params, n, nrhs, &dwork_size));
@@ -151,12 +154,12 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     CUDA_CHECK(cudaMemcpy2D(hX, ldx * sizeof(T), dX, lddx * sizeof(T), n * sizeof(T), nrhs,
                             cudaMemcpyDefault));
     CUDA_CHECK(cudaGetLastError());
-
+    memcpy(b, hX, n * sizeof(T));
     float solve_time = 0.f;
     CUDA_CHECK(cudaEventElapsedTime(&solve_time, event_start, event_end));
     if (verbose) {
         std::cout << "Solved matrix " << n << "x" << n << " with " << nrhs << " right hand sides in "
-            << solve_time << "ms" << std::endl;
+            << solve_time << " ms" << std::endl;
     }
 
     if (verbose) {
@@ -164,7 +167,6 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     }
     CUDA_CHECK(cudaFree(dwork));
     CUDA_CHECK(cudaFree(dinfo));
-    CUDA_CHECK(cudaFree(dipiv));
     CUDA_CHECK(cudaFree(dX));
     CUDA_CHECK(cudaFree(dB));
     CUDA_CHECK(cudaFree(dA));
@@ -172,7 +174,7 @@ int cuda_solve(int verbose, int n, float* a, float* b, int* ipiv) {
     CUDA_CHECK(cudaEventDestroy(event_start));
     CUDA_CHECK(cudaEventDestroy(event_end));
     CUDA_CHECK(cudaStreamDestroy(stream));
-    free(hA);
+    free(hX);
     if (verbose) {
         std::cout << "Done!" << std::endl;
     }

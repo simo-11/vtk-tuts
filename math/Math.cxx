@@ -99,59 +99,85 @@ namespace vtk_tuts {
         for (j = 0; j < n; j++) printf(" %6i", a[j]);
         printf("\n");
     }
-    static float* getRandomA(int n) {
-        float* a;
-        int lda;
-        if (n == 5) {
-            float src[5 * 5] = {
-                6.80f, -6.05f, -0.45f,  8.32f, -9.67f,
-               -2.11f, -3.30f,  2.58f,  2.71f, -5.14f,
-                5.66f, 5.36f, -2.70f,  4.35f, -7.26f,
-                5.97f, -4.44f,  0.27f, -7.17f, 6.08f,
-                8.23f, 1.08f,  9.04f,  2.14f, -6.87f
-            };
-            size_t size = 5 * 5 * sizeof(float);
-            a = (float*)malloc(size);
-            if (a!=nullptr) {
-                memcpy(a, src, size);
-            }
-        }
-        else {
-            generate_random_matrix<float>(n, n, &a, &lda);
-            make_diag_dominant_matrix<float>(n, n, a, lda);
-        }
-        return a;
+}
+float* getRandomA(int n) {
+    float* a;
+    int lda;
+    float* fixed=nullptr;
+    float src1[1 * 1] = { 3.f };
+    float src5[5 * 5] = {
+        6.80f, -6.05f, -0.45f,  8.32f, -9.67f,
+       -2.11f, -3.30f,  2.58f,  2.71f, -5.14f,
+        5.66f, 5.36f, -2.70f,  4.35f, -7.26f,
+        5.97f, -4.44f,  0.27f, -7.17f, 6.08f,
+        8.23f, 1.08f,  9.04f,  2.14f, -6.87f
+    };
+    switch (n) {
+    case 1:
+    {
+        fixed = src1;
     }
-    static float* getRandomB(int n) {
-        float* b;
-        int ldb;
-        if (n == 5) {
-            float src[5] = {
-                4.02f,
-                6.19f,
-               -8.22f,
-               -7.57f,
-               -3.03f,
-            };
-            size_t size = 5 * 5 * sizeof(float);
-            b = (float*)malloc(size);
-            memcpy(b, src, size);
-        }
-        else {
-            generate_random_matrix<float>(n, 1, &b, &ldb);
-        }
-        return b;
+    break;
+    case 5:
+        fixed = src5;
+        break;
+    default:
+        generate_random_matrix<float>(n, n, &a, &lda);
+        make_diag_dominant_matrix<float>(n, n, a, lda);
+        break;
     }
+    if (fixed != nullptr) {
+        size_t size = n * n * sizeof(float);
+        a = (float*)malloc(size);
+        if (a != nullptr) {
+            memcpy(a, fixed, size);
+        }
+    }
+    return a;
+}
+float* getRandomB(int n) {
+    float* b;
+    int ldb;
+    float* fixed = nullptr;
+    float src1[1] = { 0.9 };
+    float src5[5] = {
+        4.02f,
+        6.19f,
+       -8.22f,
+       -7.57f,
+       -3.03f,
+    };
+    switch (n) {
+    case 1:
+        fixed = src1;
+        break;
+    case 5:
+        fixed = src5;
+        break;
+    default:
+        generate_random_matrix<float>(n, 1, &b, &ldb);
+    }
+    if (fixed != nullptr) {
+        size_t size = n *  sizeof(float);
+        b = (float*)malloc(size);
+        if (b != nullptr) {
+            memcpy(b, fixed, size);
+        }
+    }
+    return b;
 }
 /*
 @return info from solver
 */
-int MathSolve(int verbose, SolverImpl impl, int n) {
-    float *a= vtk_tuts::getRandomA(n);
-    float *b= vtk_tuts::getRandomB(n);
+int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
     int* ipiv = (int *)malloc(n * sizeof(float));
     int info = 0;
     /* Solve the equations A*X = B */
+    if (verbose && n < 11) {
+        /* Print Problem */
+        vtk_tuts::print_float_matrix("A", n, n, a, n);
+        vtk_tuts::print_float_matrix("B", n, 1, b, n);
+    }
     switch (impl) {
     case mkl:
         info = lapack_solve(verbose, n, a, b, ipiv);
@@ -159,9 +185,19 @@ int MathSolve(int verbose, SolverImpl impl, int n) {
     case cuda:
         info = cuda_solve(verbose, n, a, b, ipiv);
     }
-    if (n == 5) {
-        float expected[5] = { -0.80,-0.70,0.59,1.32,0.57 };
-        for (int i = 0; i < 5; i++) {
+    float* expected = nullptr;
+    float result1[1] = { 0.3 };
+    float result5[5] = { -0.80,-0.70,0.59,1.32,0.57 };
+    switch (n) {
+    case 1:
+        expected = result1;
+        break;
+    case 5:
+        expected = result5;
+        break;
+    }
+    if (expected!=nullptr) {
+        for (int i = 0; i < n; i++) {
             float rd = b[i] / expected[i];
             if (rd < 0.99 || rd>1.01) {
                 printf("Solution failed, for %i expected %4.2f but got %4.2f\n",
@@ -174,13 +210,7 @@ int MathSolve(int verbose, SolverImpl impl, int n) {
     if (verbose && n<11) {
         /* Print solution */
         vtk_tuts::print_float_matrix("Solution", n, 1, b, 1);
-        /* Print details of LU factorization */
-        vtk_tuts::print_float_matrix("Details of LU factorization", n, n, a, n);
-        /* Print pivot indices */
-        vtk_tuts::print_int_vector("Pivot indices", n, ipiv);
     }
-    free(a);
-    free(b);
     free(ipiv);
     return info;
 }

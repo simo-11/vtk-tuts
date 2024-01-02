@@ -65,6 +65,8 @@ namespace {
     class mathCallback : public vtkCommand
     {
     public:
+        float* a = nullptr;
+        float* b = nullptr;
         static mathCallback* New()
         {
             return new mathCallback;
@@ -72,10 +74,22 @@ namespace {
         void Execute(vtkObject* caller, unsigned long, void*) override
         {
             std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-            SolverImpl solverImpl;
-            char* solverName;
+            SolverImpl solverImpl = mkl;
+            char* solverName="mkl";
+            int n = callCount / 2 + 1;
+            while (n > 10) {
+                n -= 10;
+            }
             switch (callCount % 2) {
-            default: 
+            case 0:
+                if (a != nullptr) {
+                    free(a);
+                }
+                a=getRandomA(n);
+                if (b != nullptr) {
+                    free(b);
+                }
+                b = getRandomB(n);
                 solverImpl = mkl;
                 solverName = "mkl";
                 break;
@@ -84,8 +98,26 @@ namespace {
                 solverName = "cuda";
                 break;
             }
-            int n = callCount / 2 + 5;
-            MathSolve(callCount<2?1:0,solverImpl,n);
+            size_t size = n * sizeof(float);
+            float* rhs = (float*)malloc(size);
+            if (rhs != nullptr) {
+                memcpy(rhs, b, size);
+            }
+            size *= n;
+            float* lhs = (float*)malloc(size);
+            if (lhs != nullptr) {
+                memcpy(lhs, a, size);
+            }
+            if (rhs != nullptr && lhs!=nullptr) {
+                
+                MathSolve(n <= 10 ? 1 : 0, solverImpl, n, lhs, rhs);
+            }
+            if (lhs != nullptr) {
+                free(lhs);
+            }
+            if (rhs != nullptr) {
+                free(rhs);
+            }
             callCount++;
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             long elapsedUs = std::chrono::duration_cast
