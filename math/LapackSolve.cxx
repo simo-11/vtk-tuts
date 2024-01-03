@@ -80,8 +80,8 @@ Modified for vtk-tuts
 #include "MathExample.h"
 #include "mkl_lapacke.h"
 int lapack_solve(int verbose, int n, float* a, float* b, int* ipiv) {
-    int info = LAPACKE_sgesv(LAPACK_ROW_MAJOR, n, 1, a, n, ipiv,
-        b, 1);
+    int info = LAPACKE_sgesv(LAPACK_COL_MAJOR, n, 1, a, n, ipiv,
+        b, n);
     /* Check for the exact singularity */
     if (info > 0) {
         if (verbose) {

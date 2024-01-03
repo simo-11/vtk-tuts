@@ -81,36 +81,29 @@ Modified for vtk-tuts
 #include "cusolver_utils.h"
 #include "MathExample.h"
 
-namespace vtk_tuts {
-    /* Auxiliary routine: printing a matrix */
-    static void print_float_matrix(char* desc, int m, int n, float* a, int lda) {
-        int i, j;
-        printf("\n %s\n", desc);
-        for (i = 0; i < m; i++) {
-            for (j = 0; j < n; j++) printf(" %6.2f", a[i * lda + j]);
-            printf("\n");
+void print_matrix(const char* desc,
+    const int& m, const int& n,
+    const float* A, const int& lda) {
+    printf("\n %s\n", desc);
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            std::printf("%0.2f ", A[j * lda + i]);
         }
-    }
-
-    /* Auxiliary routine: printing a vector of integers */
-    static void print_int_vector(char* desc, int n, int* a) {
-        int j;
-        printf("\n %s\n", desc);
-        for (j = 0; j < n; j++) printf(" %6i", a[j]);
-        printf("\n");
+        std::printf("\n");
     }
 }
+
 float* getRandomA(int n) {
     float* a;
     int lda;
     float* fixed=nullptr;
     float src1[1 * 1] = { 3.f };
-    float src5[5 * 5] = {
-        6.80f, -6.05f, -0.45f,  8.32f, -9.67f,
-       -2.11f, -3.30f,  2.58f,  2.71f, -5.14f,
-        5.66f, 5.36f, -2.70f,  4.35f, -7.26f,
-        5.97f, -4.44f,  0.27f, -7.17f, 6.08f,
-        8.23f, 1.08f,  9.04f,  2.14f, -6.87f
+    float src5[5 * 5] = { // stored columnwise
+         6.80f, -2.11f, 5.66f, 5.97f, 8.23f,
+        -6.05f, -3.30f, 5.36f,-4.44f, 1.08f,
+        -0.45f,  2.58f,-2.70f, 0.27f, 9.04f,
+         8.32f,  2.71f, 4.35f,-7.17f, 2.14f,
+        -9.67f, -5.14f,-7.26f, 6.08f,-6.87f
     };
     switch (n) {
     case 1:
@@ -175,8 +168,8 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
     /* Solve the equations A*X = B */
     if (verbose && n < 11) {
         /* Print Problem */
-        vtk_tuts::print_float_matrix("A", n, n, a, n);
-        vtk_tuts::print_float_matrix("B", n, 1, b, n);
+        print_matrix("A", n, n, a, n);
+        print_matrix("B", n, 1, b, n);
     }
     switch (impl) {
     case mkl:
@@ -200,8 +193,8 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
         for (int i = 0; i < n; i++) {
             float rd = b[i] / expected[i];
             if (rd < 0.99 || rd>1.01) {
-                printf("Solution failed, for %i expected %4.2f but got %4.2f\n",
-                    i,expected[i], b[i]);
+                printf("Solution failed, for x(%i) expected %4.2f but got %4.2f\n",
+                    (i+1),expected[i], b[i]);
                 info = 99;
                 break;
             }
@@ -209,51 +202,11 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
     }
     if (verbose && n<11) {
         /* Print solution */
-        vtk_tuts::print_float_matrix("Solution", n, 1, b, 1);
+        print_matrix("Solution", n, 1, b, 1);
     }
     free(ipiv);
     return info;
 }
-/**
-* moved from cusolver_utils.h to avoid LNK2005
-*/
-template <> void print_matrix(const int& m, const int& n, const float* A, const int& lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::printf("%0.2f ", A[j * lda + i]);
-        }
-        std::printf("\n");
-    }
-}
-
-template <> void print_matrix(const int& m, const int& n, const double* A, const int& lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::printf("%0.2f ", A[j * lda + i]);
-        }
-        std::printf("\n");
-    }
-}
-
-template <> void print_matrix(const int& m, const int& n, const cuComplex* A, const int& lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::printf("%0.2f + %0.2fj ", A[j * lda + i].x, A[j * lda + i].y);
-        }
-        std::printf("\n");
-    }
-}
-
-template <>
-void print_matrix(const int& m, const int& n, const cuDoubleComplex* A, const int& lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::printf("%0.2f + %0.2fj ", A[j * lda + i].x, A[j * lda + i].y);
-        }
-        std::printf("\n");
-    }
-}
-
 // Returns cudaDataType value as defined in library_types.h for the string containing type name
 cudaDataType get_cuda_library_type(std::string type_string) {
     if (type_string.compare("CUDA_R_16F") == 0)

@@ -176,9 +176,6 @@ template <> struct traits<cuDoubleComplex> {
     inline static T mul(T v, double f) { return make_cuDoubleComplex(v.x * f, v.y * f); }
 };
 
-template <typename T> void print_matrix(const int &m, const int &n, const T *A, const int &lda);
-
-
 template <typename T>
 void generate_random_matrix(cusolver_int_t m, cusolver_int_t n, T **A, int *lda) {
     std::random_device rd;
