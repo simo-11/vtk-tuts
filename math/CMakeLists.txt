@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>")
 project(MathExample LANGUAGES C CXX CUDA)
-
+set(IMGUI_DIR /users/simon/github/imgui)
+set(VTK_IMGUI_DIR /users/simon/github/vtkDearImGUIInjector/src)
+# sources and headers
+file(GLOB IMGUI_SOURCES ${IMGUI_DIR}/*.cpp)
+file(GLOB IMGUI_HEADERS ${IMGUI_DIR}/*.h)
+file(GLOB VTK_IMGUI_SOURCES ${VTK_IMGUI_DIR}/*.cxx)
+add_compile_definitions(NO_VTK_IMGUI_EXPORT)
 # Global CUDA CXX flags/options
 set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 set(CMAKE_CUDA_STANDARD 11)
@@ -40,6 +46,9 @@ MathExample.cxx
 Math.cxx
 LapackSolve.cxx
 CudaSolve.cu
+${IMGUI_SOURCES}
+"${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+${VTK_IMGUI_SOURCES}
 )
 target_link_libraries(MathExample PRIVATE 
   ${VTK_LIBRARIES}
@@ -59,6 +68,9 @@ target_include_directories(MathExample PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   ${MKL_INCLUDE}
   ${CUDA_INCLUDE_DIRS}
+  ${IMGUI_DIR}
+  "${IMGUI_DIR}/backends"
+  ${VTK_IMGUI_DIR}  
 )
 
 # vtk_module_autoinit is needed
