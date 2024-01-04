@@ -249,39 +249,7 @@ GPU usage drops to less than 1 % if there are no events.
 
  * https://www.intel.com/content/www/us/en/docs/onemkl/developer-guide-windows/2023-1/overview.html
  * https://www.intel.com/content/www/us/en/docs/onemkl/code-samples-lapack/2023-1/overview.html
-
-```
-nuget install intelmkl.devel.win-x64
-> dir C:\Users\simon\nuget dir C:\Users\simon\.nuget\packages\
-C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\build\native\include\
-C:\Users\simon\nuget> dir intelmkl.devel.win-x64.2024.0.0.49657\runtimes\win-x64\native\
-```
-#### MathExample
-Calls lapacke Sgesv on mouse move. 
-
-Tunings
- * CMakeLists.txt tuning
-   * make target hot reloadble as default - https://cmake.org/cmake/help/latest/variable/CMAKE_MSVC_DEBUG_INFORMATION_FORMAT.html
-
-```
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_intel_thread.2.dll'. Module was built without symbols.
-
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_core.2.dll'. Module was built without symbols.
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
-'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
-'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_avx2.2.dll'. Module was built without symbols.
-'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_vml_avx2.2.dll'. Module was built without symbols.
-```
-https://learn.microsoft.com/en-us/cpp/build/reference/dumpbin-reference?view=msvc-170
-```
-PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports .\mkl_intel_thread.2.dll  | findstr sgesv
-       1956  7A3 01EEAE70 mkl_lapack_sgesv
-
-PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports mkl_core.2.dll  | findstr sgesv
-       2417  970 007B1280 mkl_lapack_dsgesv
-```
+ * https://github.com/simo-11/oneapi-tuts/ own installation
 
 ### Cuda
  * https://docs.nvidia.com/cuda/cusolver/index.html
@@ -305,6 +273,39 @@ Solve info is: 0, iter is: 2
 Solved matrix 1024x1024 with 1 right hand sides in 73.6532ms
 CUDALibrarySamples\cuSOLVER\gesv\build [master ≡]> start cusolver_examples.sln
 ```
+
+
+### MathExample
+ * Initially Calls lapacke and cuda Sgesv on mouse move
+ * uses col_major storage
+ * add matrix size input using imgui (x)
+ * visualize performance using imgui and vtk
+
+Tunings
+ * CMakeLists.txt tuning
+   * make target hot reloadble as default - https://cmake.org/cmake/help/latest/variable/CMAKE_MSVC_DEBUG_INFORMATION_FORMAT.html
+     * does not work with cuda
+
+```
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_intel_thread.2.dll'. Module was built without symbols.
+
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_core.2.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Unloaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\libimalloc.dll'
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_avx2.2.dll'. Module was built without symbols.
+'MathExample.exe' (Win32): Loaded 'C:\Program Files (x86)\Intel\oneAPI\mkl\2024.0\bin\mkl_vml_avx2.2.dll'. Module was built without symbols.
+```
+https://learn.microsoft.com/en-us/cpp/build/reference/dumpbin-reference?view=msvc-170
+```
+PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports .\mkl_intel_thread.2.dll  | findstr sgesv
+       1956  7A3 01EEAE70 mkl_lapack_sgesv
+
+PS C:\Program Files (x86)\Intel\oneAPI\mkl\latest\bin> dumpbin /exports mkl_core.2.dll  | findstr sgesv
+       2417  970 007B1280 mkl_lapack_dsgesv
+```
+
   
 ### initial tests with lapacke
 https://icl.utk.edu/lapack-for-windows/lapack/index.html#lapacke
