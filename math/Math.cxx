@@ -84,13 +84,14 @@ Modified for vtk-tuts
 void print_matrix(const char* desc,
     const int& m, const int& n,
     const float* A, const int& lda) {
-    printf("\n %s\n", desc);
+    printf("\n%s=[\n", desc);
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
-            std::printf("%0.2f ", A[j * lda + i]);
+            std::printf("%s% 11.7g",(j==0?"":", "),A[j * lda + i]);
         }
         std::printf("\n");
     }
+    printf("]\n");
 }
 
 float* getRandomA(int n) {
@@ -202,7 +203,7 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
     }
     if (verbose && n<11) {
         /* Print solution */
-        print_matrix("Solution", n, 1, b, 1);
+        print_matrix("X", n, 1, b, 1);
     }
     free(ipiv);
     return info;

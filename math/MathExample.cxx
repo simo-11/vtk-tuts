@@ -77,9 +77,6 @@ namespace {
             SolverImpl solverImpl = mkl;
             char* solverName="mkl";
             int n = callCount / 2 + 1;
-            while (n > 10) {
-                n -= 10;
-            }
             switch (callCount % 2) {
             case 0:
                 if (a != nullptr) {
