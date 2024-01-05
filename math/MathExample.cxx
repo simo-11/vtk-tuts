@@ -1,8 +1,8 @@
 ﻿#include "vtkDearImGuiInjector.h"
 
 #include <vtkActor.h>
+#include "vtkCallbackCommand.h"
 #include <vtkCamera.h>
-#include <vtkCylinderSource.h>
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
 #include <vtkPolyDataMapper.h>
@@ -20,6 +20,9 @@
 #include <sstream>
 #include <vtkWin32OpenGLRenderWindow.h>
 #include "MathExample.h"
+#include "imgui.h"
+#include <vtkInteractorObserver.h>
+#include <vtkInteractorStyleSwitch.h>
 namespace {
     static const char* windowTitle=nullptr;
     // Callback for the interaction.
@@ -36,13 +39,15 @@ namespace {
                 return;
             }
             try {
-                auto interactor = reinterpret_cast<vtkRenderWindowInteractor*>(caller);
+                auto interactor = reinterpret_cast
+                    <vtkRenderWindowInteractor*>(caller);
                 auto renderWindow = interactor->GetRenderWindow();
                 auto glWindow = static_cast
                     <vtkWin32OpenGLRenderWindow*>(renderWindow);
                 if (glWindow->SupportsOpenGL()) {
                     glWindow->ReportCapabilities();
-                    const char* glRenderer = (const char*)glGetString(GL_RENDERER);
+                    const char* glRenderer = (const char*)
+                        glGetString(GL_RENDERER);
                     std::ostringstream strm;
                     strm << "Rectangle";
                     if (glRenderer)
@@ -75,7 +80,8 @@ namespace {
         }
         void Execute(vtkObject* caller, unsigned long, void*) override
         {
-            std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point start = 
+                std::chrono::steady_clock::now();
             SolverImpl solverImpl = mkl;
             char* solverName="mkl";
             int n = callCount / 2 + 1;
@@ -118,10 +124,12 @@ namespace {
                 free(rhs);
             }
             callCount++;
-            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point end = 
+                std::chrono::steady_clock::now();
             long elapsedUs = std::chrono::duration_cast
                 <std::chrono::microseconds>(end - start).count();
-            std::clog << "Call #"<<callCount<< " to MathSolve("<<solverName<<") took "
+            std::clog << "Call #"<<callCount<< 
+                " to MathSolve("<<solverName<<") took "
                 << elapsedUs << " us, n="<<n<< std::endl;
 
         }
@@ -141,20 +149,135 @@ int main(int, char*[])
   iren->SetRenderWindow(renderWindow);
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
   renderWindowInteractor->SetRenderWindow(renderWindow);
-  unsigned long event=vtkCommand::EnterEvent;
-  vtkNew<tutCallback> cb;
-  renderWindowInteractor->AddObserver(event, cb);
-  vtkNew<mathCallback> mathCb;
-  renderWindowInteractor->AddObserver
-  (vtkCommand::MouseMoveEvent, mathCb);
+  bool useVtkEvents = false;
+  if (useVtkEvents) {
+      vtkNew<tutCallback> cb;
+      renderWindowInteractor->AddObserver
+      (vtkCommand::EnterEvent, cb);
+      vtkNew<mathCallback> mathCb;
+      renderWindowInteractor->AddObserver
+      (vtkCommand::MouseMoveEvent, mathCb);
+  }
   renderWindow->Render();
   renderWindowInteractor->Start();
   vtkNew<vtkDearImGuiInjector> dearImGuiOverlay;
   dearImGuiOverlay->DebugOff();
   dearImGuiOverlay->Inject(iren);
+  vtkNew<vtkCallbackCommand> uiSetupCmd;
+  uiSetupCmd->SetCallback(MathExampleUI::setup);
+  dearImGuiOverlay->AddObserver(vtkDearImGuiInjector::ImGuiSetupEvent,
+      uiSetupCmd);
+  vtkNew<vtkCallbackCommand> uiDrawCmd;
+  uiDrawCmd->SetCallback(MathExampleUI::draw);
+  dearImGuiOverlay->AddObserver(vtkDearImGuiInjector::ImGuiDrawEvent,
+      uiDrawCmd);
   // Start event loop
-  renderWindow->SetSize(400, 400);
+  renderWindow->SetSize(800, 800);
   iren->EnableRenderOff();
   iren->Start();
   return EXIT_SUCCESS;
+}
+
+void MathExampleUI::setup(vtkObject* caller, unsigned long, void*, 
+    void* callData)
+{
+    vtkDearImGuiInjector* injector = reinterpret_cast
+        <vtkDearImGuiInjector*>(caller);
+    if (!callData)
+    {
+        return;
+    }
+    bool imguiInitStatus = *(reinterpret_cast<bool*>(callData));
+    if (imguiInitStatus)
+    {
+    }
+    else
+    {
+        vtkErrorWithObjectMacro(
+            injector, R"(
+Failed to setup overlay UI because 
+ImGUI failed to initialize!)");
+    }
+}
+
+namespace
+{
+    void HelpMarker(const char* desc)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+}
+
+void MathExampleUI::draw(vtkObject* caller, 
+    unsigned long, void*, void* callData)
+{
+    vtkDearImGuiInjector* injector = reinterpret_cast
+        <vtkDearImGuiInjector*>(caller);
+    ImGui::SetNextWindowBgAlpha(0.5);
+    ImGui::SetNextWindowPos(ImVec2(5, 25), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(450, 550), ImGuiCond_Once);
+    ImGui::Begin("VTK");
+    if (ImGui::CollapsingHeader("vtkRenderWindow", 
+        ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        auto rw = injector->Interactor->GetRenderWindow();
+        ImGui::Text("MTime: %ld", rw->GetMTime());
+        ImGui::Text("Name: %s", rw->GetClassName());
+        if (ImGui::TreeNode("Capabilities"))
+        {
+            ImGui::TextWrapped("OpenGL: %s", rw->ReportCapabilities());
+            ImGui::TreePop();
+        }
+    }
+    if (ImGui::CollapsingHeader("vtkRenderWindowInteractor", 
+        ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        auto& iren = injector->Interactor;
+        ImGui::Text("MTime: %ld", iren->GetMTime());
+        ImGui::Text("Name: %s", iren->GetClassName());
+        if (ImGui::TreeNode("Style"))
+        {
+            auto styleBase = iren->GetInteractorStyle();
+            vtkInteractorObserver* iStyle = nullptr;
+            if (styleBase->IsA("vtkInteractorStyleSwitchBase"))
+            {
+                iStyle = vtkInteractorStyleSwitch::SafeDownCast
+                    (styleBase)->GetCurrentStyle();
+            }
+            else
+            {
+                iStyle = styleBase;
+            }
+            ImGui::Text("MTime: %ld", iStyle->GetMTime());
+            ImGui::Text("Name: %s", iStyle->GetClassName());
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Mouse"))
+        {
+            int* xy = iren->GetEventPosition();
+            ImGui::Text("X: %d", xy[0]);
+            ImGui::Text("Y: %d", xy[1]);
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Keyboard"))
+        {
+            ImGui::Text("KeySym: %s", iren->GetKeySym());
+            ImGui::SameLine();
+            HelpMarker("VTK does not flush KeySym per frame.");
+            ImGui::Text("KeyCode: %c", iren->GetKeyCode());
+            ImGui::Text("Mods: %s %s %s", (iren->GetAltKey() ? "ALT" : " "),
+                (iren->GetControlKey() ? "CTRL" : " "), 
+                (iren->GetShiftKey() ? "SHIFT" : " "));
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
 }
