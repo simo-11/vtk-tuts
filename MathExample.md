@@ -1,8 +1,8 @@
 # MathExample
 
- * Initially Calls lapacke and cuda Sgesv on mouse move
+ * calls lapacke and cuda Sgesv using thread pool [CTPL](https://github.com/vit-vit/CTPL)
+ * matrix sizes and size of thread pools are controlled using imgui (x) 
  * uses col_major storage
- * add matrix size input using imgui (x)
  * visualize performance using imgui and vtk
  * environment setting for using mkl in oneAPI installation
 ```
