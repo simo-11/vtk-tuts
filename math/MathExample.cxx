@@ -147,19 +147,7 @@ int main(int, char*[])
   renderWindow->AddRenderer(renderer);
   renderWindow->SetWindowName("MathExample");
   iren->SetRenderWindow(renderWindow);
-  vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
-  renderWindowInteractor->SetRenderWindow(renderWindow);
-  bool useVtkEvents = false;
-  if (useVtkEvents) {
-      vtkNew<tutCallback> cb;
-      renderWindowInteractor->AddObserver
-      (vtkCommand::EnterEvent, cb);
-      vtkNew<mathCallback> mathCb;
-      renderWindowInteractor->AddObserver
-      (vtkCommand::MouseMoveEvent, mathCb);
-  }
   renderWindow->Render();
-  renderWindowInteractor->Start();
   vtkNew<vtkDearImGuiInjector> dearImGuiOverlay;
   dearImGuiOverlay->DebugOff();
   dearImGuiOverlay->Inject(iren);
