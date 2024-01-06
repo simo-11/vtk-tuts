@@ -20,6 +20,7 @@
 #include <sstream>
 #include <vtkWin32OpenGLRenderWindow.h>
 #include "MathExample.h"
+#include "ctpl_stl.h"
 #include "imgui.h"
 #include <vtkInteractorObserver.h>
 #include <vtkInteractorStyleSwitch.h>
@@ -135,7 +136,7 @@ namespace {
         }
         mathCallback() = default;
     };
-
+    ctpl::thread_pool threadPool;
 } // namespace
 
 int main(int, char*[])
@@ -160,7 +161,7 @@ int main(int, char*[])
   dearImGuiOverlay->AddObserver(vtkDearImGuiInjector::ImGuiDrawEvent,
       uiDrawCmd);
   // Start event loop
-  renderWindow->SetSize(800, 800);
+  renderWindow->SetSize(1200, 800);
   iren->EnableRenderOff();
   iren->Start();
   return EXIT_SUCCESS;

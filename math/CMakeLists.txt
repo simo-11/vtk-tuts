@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>")
-project(MathExample LANGUAGES C CXX CUDA)
-set(IMGUI_DIR /users/simon/github/imgui)
-set(VTK_IMGUI_DIR /users/simon/github/vtkDearImGUIInjector/src)
+set(NAME MathExample)
+set(GROOT /users/simon/github)
+project(${NAME} LANGUAGES C CXX CUDA)
+set(IMGUI_DIR ${GROOT}/imgui)
+set(VTK_IMGUI_DIR ${GROOT}/vtkDearImGUIInjector/src)
+set(CTPL_DIR ${GROOT}/CTPL)
 # sources and headers
 file(GLOB IMGUI_SOURCES ${IMGUI_DIR}/*.cpp)
 file(GLOB IMGUI_HEADERS ${IMGUI_DIR}/*.h)
@@ -27,22 +30,22 @@ find_package(VTK COMPONENTS
 )
 
 if (NOT VTK_FOUND)
-  message(FATAL_ERROR "MathExample: Unable to find the VTK build folder.")
+  message(FATAL_ERROR "${NAME}: Unable to find the VTK build folder.")
 endif()
 
 find_package(LAPACK)
 
 if (NOT LAPACK_FOUND)
-  message(FATAL_ERROR "MathExample: Unable to find LAPACK_LIBRARIES")
+  message(FATAL_ERROR "${NAME}: Unable to find LAPACK_LIBRARIES")
 endif()
 
 find_package(MKL)
 if (NOT MKL_FOUND)
-  message(FATAL_ERROR "MathExample: Unable to find MKL")
+  message(FATAL_ERROR "${NAME}: Unable to find MKL")
 endif()
 
-add_executable(MathExample MACOSX_BUNDLE 
-MathExample.cxx 
+add_executable(${NAME} MACOSX_BUNDLE
+${NAME}.cxx 
 Math.cxx
 LapackSolve.cxx
 CudaSolve.cu
@@ -50,7 +53,7 @@ ${IMGUI_SOURCES}
 "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
 ${VTK_IMGUI_SOURCES}
 )
-target_link_libraries(MathExample PRIVATE 
+target_link_libraries(${NAME} PRIVATE
   ${VTK_LIBRARIES}
   ${LAPACK_LIBRARIES}
     PUBLIC
@@ -64,17 +67,18 @@ set_target_properties(${EXAMPLE_NAME} PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
-target_include_directories(MathExample PUBLIC
+target_include_directories(${NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   ${MKL_INCLUDE}
   ${CUDA_INCLUDE_DIRS}
   ${IMGUI_DIR}
   "${IMGUI_DIR}/backends"
   ${VTK_IMGUI_DIR}  
+  ${CTPL_DIR}
 )
 
 # vtk_module_autoinit is needed
 vtk_module_autoinit(
-  TARGETS MathExample
+  TARGETS ${NAME}
   MODULES ${VTK_LIBRARIES}
 )
