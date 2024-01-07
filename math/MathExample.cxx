@@ -68,6 +68,7 @@ namespace {
 		mklUs = 0;
 		cudaCount = 0;
 		cudaUs = 0;
+		meErrorCode = 0;
 		int methodCount = 0;
 		if (useMkl) methodCount++;
 		if (useCuda) methodCount++;
@@ -87,6 +88,7 @@ namespace {
 	void solveTask(int id, SolverImpl solverImpl) {
 		size_t rhs_size = matrixSize * sizeof(float);
 		Workspaces ws;
+		ws.n = matrixSize;
 		int errNo=0;
 		switch (solverImpl) {
 		case mkl:
@@ -243,13 +245,13 @@ void MathExampleUI::draw(vtkObject* caller,
 				running = false;
 			}
 		}
+		if (meErrorCode != 0) {
+			stopRequested = true;
+			ImGui::Text("Stop due to errorCode %d %s %s",
+				meErrorCode, getErrorSource(), getErrorReason());
+		}
 		bool showAsRunning = running;
 		if (showAsRunning) {
-			if (meErrorCode != 0) {
-				stopRequested = true;
-				ImGui::Text("Stopping due to errorCode %d %s %s", 
-					meErrorCode, getErrorSource(), getErrorReason());
-			}
 			bool val = stopRequested;
 			if (ImGui::Checkbox("Stop", &val)) {
 				if (val) {

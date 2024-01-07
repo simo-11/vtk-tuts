@@ -176,7 +176,6 @@ int cuda_solve(int verbose, int n, float* a, float* b, Workspaces* ws) {
     CUDA_CHECK(cudaEventDestroy(event_start));
     CUDA_CHECK(cudaEventDestroy(event_end));
     CUDA_CHECK(cudaStreamDestroy(stream));
-    free(hX);
     if (verbose) {
         std::cout << "Done!" << std::endl;
     }
