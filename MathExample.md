@@ -17,7 +17,9 @@ Tunings
 
 ## 7.1.2024
 
- * work spaces allocated for each solve for cuda
+ * work spaces allocated for each solve
+    * for mkl only ipiv vector was allocated  
+    * for cuda
  * mkl does not need allocations during solves as col_major is used
 
 ![image](https://github.com/simo-11/vtk-tuts/assets/1210784/c0705750-2029-4ebf-8f8d-d5dd583148fe)
