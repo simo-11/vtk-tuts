@@ -90,21 +90,20 @@ float* getRandomB(int n) {
 /*
 @return info from solver
 */
-int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
-    int* ipiv = (int *)malloc(n * sizeof(float));
+int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b, Workspaces* ws) {
     int info = 0;
     /* Solve the equations A*X = B */
-    if (verbose && n < 11) {
+    if (verbose>1) {
         /* Print Problem */
         print_matrix("A", n, n, a, n);
         print_matrix("B", n, 1, b, n);
     }
     switch (impl) {
     case mkl:
-        info = lapack_solve(verbose, n, a, b, ipiv);
+        info = lapack_solve(verbose, n, a, b, ws);
         break;
     case cuda:
-        info = cuda_solve(verbose, n, a, b, ipiv);
+        info = cuda_solve(verbose, n, a, b, ws);
     }
     float* expected = nullptr;
     float result1[1] = { 0.3 };
@@ -128,11 +127,10 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b) {
             }
         }
     }
-    if (verbose && n<11) {
+    if (verbose>1) {
         /* Print solution */
         print_matrix("X", n, 1, b, 1);
     }
-    free(ipiv);
     return info;
 }
 // Returns cudaDataType value as defined in library_types.h for the string containing type name

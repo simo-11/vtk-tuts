@@ -25,6 +25,7 @@
 #include <vtkInteractorObserver.h>
 #include <vtkInteractorStyleSwitch.h>
 namespace {
+	/* */
 	void solveTask(int id, SolverImpl solverImpl);
 	void startWorkThreads();
 	float* a = nullptr, * b = nullptr;
@@ -32,7 +33,24 @@ namespace {
 	std::atomic_long mklUs, cudaUs;
 	ctpl::thread_pool threadPool;
 	int matrixSize = 1, threadCount = 0, verbose = 0, sleepAfterSolve=100;
+	int meErrorCode = 0;
 	bool useMkl, useCuda, running, stopRequested;
+	enum MeErrorCodeBase { LAPACK_ALLOCATE, CUDA_ALLOCATE };
+	int getMeErrorCode(MeErrorCodeBase base, int local) {
+		return base * 100 + local;
+	}
+	const char* getErrorSource() {
+		switch (meErrorCode / 100) {
+		case LAPACK_ALLOCATE: return "Lapack allocation";
+		case CUDA_ALLOCATE: return "Cuda allocation";
+		}
+	}
+	const char* getErrorReason() {
+		switch (meErrorCode / 100) {
+		case LAPACK_ALLOCATE: return get_lapack_error_reason(meErrorCode%100);
+		case CUDA_ALLOCATE: return get_cuda_error_reason(meErrorCode % 100);
+		}
+	}
 	void restart() {
 		if (a != nullptr) {
 			free(a);
@@ -68,16 +86,38 @@ namespace {
 	}
 	void solveTask(int id, SolverImpl solverImpl) {
 		size_t rhs_size = matrixSize * sizeof(float);
+		Workspaces ws;
+		int errNo=0;
+		switch (solverImpl) {
+		case mkl:
+			errNo = lapack_allocate(&ws);
+			switch (errNo) {
+			case 0:
+				break;
+			default: meErrorCode = getMeErrorCode(LAPACK_ALLOCATE, errNo);
+				return;
+			}
+			break;
+		case cuda:
+			errNo = cuda_allocate(&ws);
+			switch (errNo) {
+			case 0:
+				break;
+			default: meErrorCode = getMeErrorCode(CUDA_ALLOCATE, errNo);
+				return;
+			}
+			break;
+		}
 		float* rhs = (float*)malloc(rhs_size);
 		size_t lhs_size = rhs_size*matrixSize;
 		float* lhs = (float*)malloc(lhs_size);
 		if (rhs != nullptr && lhs != nullptr) {
-			while (!stopRequested) {
+			while (!stopRequested && meErrorCode==0) {
 				memcpy(lhs, a, lhs_size);
 				memcpy(rhs, b, rhs_size);
 				std::chrono::steady_clock::time_point start =
 					std::chrono::steady_clock::now();
-				MathSolve(verbose, solverImpl, matrixSize, lhs, rhs);
+				MathSolve(verbose, solverImpl, matrixSize, lhs, rhs, &ws);
 				std::chrono::steady_clock::time_point end =
 					std::chrono::steady_clock::now();
 				long elapsedUs = std::chrono::duration_cast
@@ -205,6 +245,11 @@ void MathExampleUI::draw(vtkObject* caller,
 		}
 		bool showAsRunning = running;
 		if (showAsRunning) {
+			if (meErrorCode != 0) {
+				stopRequested = true;
+				ImGui::Text("Stopping due to errorCode %d %s %s", 
+					meErrorCode, getErrorSource(), getErrorReason());
+			}
 			bool val = stopRequested;
 			if (ImGui::Checkbox("Stop", &val)) {
 				if (val) {
