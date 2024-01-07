@@ -18,5 +18,5 @@ Tunings
 ## 7.1.2024
 
  * work spaces allocated for each solve
-   
-![image](https://github.com/simo-11/vtk-tuts/assets/1210784/3dea5afe-cce8-4e60-abae-ac3db93f09b2)
+
+![image](https://github.com/simo-11/vtk-tuts/assets/1210784/c0705750-2029-4ebf-8f8d-d5dd583148fe)
