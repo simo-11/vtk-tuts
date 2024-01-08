@@ -1,4 +1,7 @@
 #pragma once
+#include <cuda_runtime.h>
+#include <cusolverDn.h>
+#include "cusolver_utils.h"
 enum SolverImpl {mkl,cuda};
 struct Workspaces {
 	int n;
@@ -6,6 +9,26 @@ struct Workspaces {
 	int* ipiv;
 	/* for cuda */
 	float* hx;
+	cudaStream_t stream;
+	cusolverDnHandle_t handle;
+	cusolverDnIRSParams_t gesv_params;
+	cusolverDnIRSInfos_t gesv_info;
+	float* dA;
+	cusolver_int_t ldda;
+	// right hand side on device
+	float* dB;
+	cusolver_int_t lddb;
+	// solution on device
+	float* dX;
+	cusolver_int_t lddx;
+	// info indicator on device
+	cusolver_int_t* dinfo;
+	// work buffer
+	void* dwork;
+	// size of work buffer
+	size_t dwork_size;
+	// number of refinement iterations returned by solver
+	cusolver_int_t iter;
 };
 extern float* getRandomA(int n);
 extern float* getRandomB(int n);

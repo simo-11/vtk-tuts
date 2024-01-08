@@ -32,9 +32,9 @@ namespace {
 	std::atomic_long mklCount, cudaCount;
 	std::atomic_long mklUs, cudaUs;
 	ctpl::thread_pool threadPool;
-	int matrixSize = 1, threadCount = 0, verbose = 0, sleepAfterSolve=100;
+	int matrixSize = 150, threadCount = 1, verbose = 0, sleepAfterSolve=0;
 	int meErrorCode = 0;
-	bool useMkl, useCuda, running, stopRequested;
+	bool useMkl=true, useCuda=true, running, stopRequested;
 	enum MeErrorCodeBase { LAPACK_ALLOCATE, CUDA_ALLOCATE };
 	int getMeErrorCode(MeErrorCodeBase base, int local) {
 		return base * 100 + local;
@@ -156,7 +156,9 @@ namespace {
 			average /= 1000;
 			unit = "ms";
 		}
-		ImGui::Text("%d solves, average=%d %s", count, average, unit);
+		long sps = std::lround((1e6*count)/((float)us));
+		ImGui::Text("%d solves, average=%d %s, %d sps", 
+			count, average, unit, sps);
 	}
 } // namespace
 
