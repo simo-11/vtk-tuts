@@ -44,12 +44,14 @@ namespace {
 		case LAPACK_ALLOCATE: return "Lapack allocation";
 		case CUDA_ALLOCATE: return "Cuda allocation";
 		}
+		return "fix getErrorSource";
 	}
 	const char* getErrorReason() {
 		switch (meErrorCode / 100) {
 		case LAPACK_ALLOCATE: return get_lapack_error_reason(meErrorCode%100);
 		case CUDA_ALLOCATE: return get_cuda_error_reason(meErrorCode % 100);
 		}
+		return "fix getErrorReason";
 	}
 	void restart() {
 		if (a != nullptr) {
@@ -254,22 +256,23 @@ void MathExampleUI::draw(vtkObject* caller,
 		}
 		bool showAsRunning = running;
 		if (showAsRunning) {
-			bool val = stopRequested;
-			if (ImGui::Checkbox("Stop", &val)) {
-				if (val) {
-					stopRequested = true;
-					ImGui::SameLine();
-					ImGui::Text("requested, waiting tasks to complete");
-				}
+			if (stopRequested) {
+				ImGui::BeginDisabled();
 			}
-			ImGui::BeginDisabled();
+			else {
+				if (ImGui::Button("Stop")) {
+					stopRequested = true;
+				}
+				ImGui::BeginDisabled();
+			}
+			if (stopRequested) {
+				ImGui::SameLine();
+				ImGui::Text("requested, waiting tasks to complete");
+			}
 		}
 		else {
-			bool start=false;
-			if (ImGui::Checkbox("Start", &start)) {
-				if (start) {
-					restart();
-				}
+			if (ImGui::Button("Start")) {
+				restart();
 			}
 		}
 		ImGui::SliderInt
