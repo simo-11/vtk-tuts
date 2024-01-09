@@ -104,6 +104,10 @@ int MathSolve(int verbose, SolverImpl impl, int n, float* a, float* b, Workspace
         break;
     case cuda:
         info = cuda_solve(verbose, n, a, b, ws);
+        break;
+    case vtkMath:
+        info = vtk_solve(verbose, n, a, b, ws);
+        break;
     }
     float* expected = nullptr;
     float result1[1] = { 0.3 };

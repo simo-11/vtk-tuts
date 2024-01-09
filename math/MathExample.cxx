@@ -29,13 +29,15 @@ namespace {
 	void solveTask(int id, SolverImpl solverImpl);
 	void startWorkThreads();
 	float* a = nullptr, * b = nullptr;
-	std::atomic_long mklCount, cudaCount;
-	std::atomic_long mklUs, cudaUs;
+	std::atomic_long mklCount, cudaCount, vtkCount;
+	std::atomic_long mklUs, cudaUs, vtkUs;
 	ctpl::thread_pool threadPool;
 	int matrixSize = 150, threadCount = 1, verbose = 0, sleepAfterSolve=0;
 	int meErrorCode = 0;
-	bool useMkl=true, useCuda=true, running, stopRequested;
-	enum MeErrorCodeBase { LAPACK_ALLOCATE, CUDA_ALLOCATE };
+	bool useMkl=true, useCuda=true, useVtk=true, running, stopRequested;
+	enum MeErrorCodeBase { 
+		LAPACK_ALLOCATE, CUDA_ALLOCATE, VTK_MATH_ALLOCATE
+	};
 	int getMeErrorCode(MeErrorCodeBase base, int local) {
 		return base * 100 + local;
 	}
@@ -43,6 +45,7 @@ namespace {
 		switch (meErrorCode / 100) {
 		case LAPACK_ALLOCATE: return "Lapack allocation";
 		case CUDA_ALLOCATE: return "Cuda allocation";
+		case VTK_MATH_ALLOCATE: return "VtkSolve allocation";
 		}
 		return "fix getErrorSource";
 	}
@@ -50,6 +53,7 @@ namespace {
 		switch (meErrorCode / 100) {
 		case LAPACK_ALLOCATE: return get_lapack_error_reason(meErrorCode%100);
 		case CUDA_ALLOCATE: return get_cuda_error_reason(meErrorCode % 100);
+		case VTK_MATH_ALLOCATE: return get_vtk_error_reason(meErrorCode % 100);
 		}
 		return "fix getErrorReason";
 	}
@@ -74,6 +78,7 @@ namespace {
 		int methodCount = 0;
 		if (useMkl) methodCount++;
 		if (useCuda) methodCount++;
+		if (useVtk) methodCount++;
 		int size = methodCount * threadCount;
 		threadPool.resize(size);
 		stopRequested = false;
@@ -83,6 +88,9 @@ namespace {
 			}
 			if (useCuda) {
 				threadPool.push(solveTask, cuda);
+			}
+			if (useVtk) {
+				threadPool.push(solveTask, vtkMath);
 			}
 		}
 		running = true;
@@ -111,6 +119,15 @@ namespace {
 				return;
 			}
 			break;
+		case vtkMath:
+			errNo = vtk_allocate(&ws);
+			switch (errNo) {
+			case 0:
+				break;
+			default: meErrorCode = getMeErrorCode(VTK_MATH_ALLOCATE, errNo);
+				return;
+			}
+			break;
 		}
 		float* rhs = (float*)malloc(rhs_size);
 		size_t lhs_size = rhs_size*matrixSize;
@@ -134,6 +151,10 @@ namespace {
 				case cuda:
 					cudaUs += elapsedUs;
 					cudaCount++;
+					break;
+				case vtkMath:
+					vtkUs += elapsedUs;
+					vtkCount++;
 					break;
 				}
 				std::chrono::milliseconds duration(sleepAfterSolve);
@@ -284,6 +305,8 @@ void MathExampleUI::draw(vtkObject* caller,
 		addStats(mklCount, mklUs);
 		ImGui::Checkbox("CUDA", &useCuda);
 		addStats(cudaCount, cudaUs);
+		ImGui::Checkbox("VTK", &useVtk);
+		addStats(vtkCount, vtkUs);
 		if(showAsRunning) ImGui::EndDisabled();
 		ImGui::SliderInt("verbosity", &verbose, 0, 5,
 			nullptr, ImGuiSliderFlags_AlwaysClamp);

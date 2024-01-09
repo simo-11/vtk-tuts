@@ -48,6 +48,7 @@ add_executable(${NAME} MACOSX_BUNDLE
 ${NAME}.cxx 
 Math.cxx
 LapackSolve.cxx
+VtkSolve.cxx
 CudaSolve.cu
 ${IMGUI_SOURCES}
 "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"

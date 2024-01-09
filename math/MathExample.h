@@ -2,10 +2,10 @@
 #include <cuda_runtime.h>
 #include <cusolverDn.h>
 #include "cusolver_utils.h"
-enum SolverImpl {mkl,cuda};
+enum SolverImpl {mkl,cuda,vtkMath};
 struct Workspaces {
 	int n;
-	/* for mkl */
+	/* for mkl, and vtkSolve */
 	int* ipiv;
 	/* for cuda */
 	float* hx;
@@ -29,6 +29,9 @@ struct Workspaces {
 	size_t dwork_size;
 	// number of refinement iterations returned by solver
 	cusolver_int_t iter;
+	// for vtkSolve
+	double** A;
+	double* x;
 };
 extern float* getRandomA(int n);
 extern float* getRandomB(int n);
@@ -42,6 +45,10 @@ extern int cuda_allocate(Workspaces* ws);
 extern int cuda_free(Workspaces* ws);
 extern int cuda_solve(int verbose, int n, float* a, float* b, Workspaces* ws);
 extern const char* get_cuda_error_reason(int n);
+extern int vtk_allocate(Workspaces* ws);
+extern int vtk_free(Workspaces* ws);
+extern int vtk_solve(int verbose, int n, float* a, float* b, Workspaces* ws);
+extern const char* get_vtk_error_reason(int n);
 
 class vtkObject;
 
