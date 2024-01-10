@@ -11,9 +11,15 @@ int vtk_allocate(Workspaces* ws) {
     if (ws->ipiv == nullptr) {
         return IPIV_ALLOCATE;
     }
-    ws->A = (double**)malloc(ws->n* ws->n * sizeof(double));
-    if (ws->ipiv == nullptr) {
+    ws->A = new double* [ws->n];
+    if (ws->A == nullptr) {
         return A_ALLOCATE;
+    }
+    for (int i = 0; i < ws->n; i++) {
+        ws->A[i] = new double[ws->n];
+        if (ws->A[i] == nullptr) {
+            return A_ALLOCATE;
+        }
     }
     ws->x = (double*)malloc(ws->n * sizeof(double));
     if (ws->ipiv == nullptr) {
@@ -27,7 +33,12 @@ int vtk_free(Workspaces* ws) {
     }
     ws->ipiv = nullptr;
     if (ws->A != nullptr) {
-        free(ws->A);
+        for (int i = 0; i < ws->n; i++) {
+            if (ws->A[i] != nullptr) {
+                delete[] ws->A[i];
+            }
+        }
+        delete[] ws->A;
     }
     ws->A = nullptr;
     if (ws->x != nullptr) {

@@ -75,6 +75,8 @@ namespace {
 		cudaCount = 0;
 		cudaUs = 0;
 		meErrorCode = 0;
+		vtkCount = 0;
+		vtkUs = 0;
 		int methodCount = 0;
 		if (useMkl) methodCount++;
 		if (useCuda) methodCount++;
@@ -179,8 +181,8 @@ namespace {
 			average /= 1000;
 			unit = "ms";
 		}
-		long sps = std::lround((1e6*count)/((float)us));
-		ImGui::Text("%d solves, average=%d %s, %d sps", 
+		float sps = (1e6*count)/((float)us);
+		ImGui::Text("%d solves, average=%d %s, %.3g sps", 
 			count, average, unit, sps);
 	}
 } // namespace
@@ -277,16 +279,21 @@ void MathExampleUI::draw(vtkObject* caller,
 		}
 		bool showAsRunning = running;
 		if (showAsRunning) {
+			bool buttonShown = false;
 			if (stopRequested) {
 				ImGui::BeginDisabled();
 			}
 			else {
+				buttonShown = true;
 				if (ImGui::Button("Stop")) {
 					stopRequested = true;
 				}
 				ImGui::BeginDisabled();
 			}
 			if (stopRequested) {
+				if (!buttonShown) {
+					ImGui::Text("Stop");
+				}
 				ImGui::SameLine();
 				ImGui::Text("requested, waiting tasks to complete");
 			}
