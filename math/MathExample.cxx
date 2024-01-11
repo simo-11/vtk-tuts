@@ -32,6 +32,7 @@ namespace {
 	std::atomic_long mklCount, cudaCount, vtkCount;
 	std::atomic_long mklUs, cudaUs, vtkUs;
 	ctpl::thread_pool threadPool;
+	std::chrono::steady_clock::time_point wallStart, wallEnd;
 	int matrixSize = 150, threadCount = 1, verbose = 0, sleepAfterSolve=0;
 	int meErrorCode = 0;
 	bool useMkl=true, useCuda=true, useVtk=true, running, stopRequested;
@@ -70,6 +71,7 @@ namespace {
 	};
 	void startWorkThreads()
 	{
+		wallStart=std::chrono::steady_clock::now();
 		mklCount = 0;
 		mklUs = 0;
 		cudaCount = 0;
@@ -181,8 +183,13 @@ namespace {
 			average /= 1000;
 			unit = "ms";
 		}
-		float sps = (1e6*count)/((float)us);
-		ImGui::Text("%d solves, average=%d %s, %.3g sps", 
+		if (running) {
+			wallEnd = std::chrono::steady_clock::now();
+		}
+		long wallUs = std::chrono::duration_cast
+			<std::chrono::microseconds>(wallEnd - wallStart).count();
+		float sps = (1e6*count)/((float)wallUs);
+		ImGui::Text("%d solves, average=%d %s, %.4g sps", 
 			count, average, unit, sps);
 	}
 } // namespace
@@ -261,7 +268,7 @@ void MathExampleUI::draw(vtkObject* caller,
 
 	ImGui::SetNextWindowBgAlpha(0.5);
 	// MathExample
-	ImGui::SetNextWindowPos(ImVec2(5, 25 + 10 + 550), ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(5, 25 + 10 + 250), ImGuiCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(600, 550), ImGuiCond_Once);
 	ImGui::Begin("MathExample");
 	if (ImGui::CollapsingHeader("threadPool",
