@@ -192,7 +192,21 @@ namespace {
 		ImGui::Text("%d solves, average=%d %s, %.4g sps", 
 			count, average, unit, sps);
 	}
-} // namespace
+	void addWallTotal() {
+		long wt = mklCount + cudaCount + vtkCount;
+		if (wt == 0) {
+			return;
+		}
+		if (running) {
+			wallEnd = std::chrono::steady_clock::now();
+		}
+		float wallS = 1e-6*std::chrono::duration_cast
+			<std::chrono::microseconds>(wallEnd - wallStart).count();
+		float sps = wt / wallS;
+		ImGui::Text("Total: %d solves in %.3g s, %.4g sps",
+			wt, wallS, sps);
+	}
+} // empty namespace
 
 int main(int, char* [])
 {
@@ -311,7 +325,7 @@ void MathExampleUI::draw(vtkObject* caller,
 			}
 		}
 		ImGui::SliderInt
-			("Thread count", &threadCount, 0, 10,
+			("Thread count", &threadCount, 1, 10,
 			nullptr, ImGuiSliderFlags_AlwaysClamp);
 		ImGui::SliderInt("Matrix size", &matrixSize, 1, 1024,
 			nullptr, ImGuiSliderFlags_AlwaysClamp);
@@ -322,6 +336,7 @@ void MathExampleUI::draw(vtkObject* caller,
 		ImGui::Checkbox("VTK", &useVtk);
 		addStats(vtkCount, vtkUs);
 		if(showAsRunning) ImGui::EndDisabled();
+		addWallTotal();
 		ImGui::SliderInt("verbosity", &verbose, 0, 5,
 			nullptr, ImGuiSliderFlags_AlwaysClamp);
 		ImGui::SliderInt("Sleep after solve [ms]", &sleepAfterSolve, 0, 1000,
