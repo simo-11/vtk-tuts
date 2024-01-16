@@ -25,9 +25,16 @@ Build Debug configuration for Debugging
 >cmake --build %HOMEPATH%\build\vtk --config Debug
 ```
 
+## rebuilds
+
+### enable cli11
+C:\Users\simon\build\vtk\CMakeCache.txt change from DEFAULT to WANT
+VTK_MODULE_ENABLE_VTK_cli11:STRING=WANT
+
 # prepare
 add the VTK bin directory to your path. This will resolve the VTK dll's at run time.
 C:\Users\simon\build\vtk\bin\Debug
+
 
 # Building examples
 
