@@ -32,6 +32,12 @@ C:\Users\simon\build\vtk\CMakeCache.txt change from DEFAULT to WANT
 
 VTK_MODULE_ENABLE_VTK_cli11:STRING=WANT
 
+Or as noted in https://examples.vtk.org/site/Cxx/GeometricObjects/ParametricObjectsDemo/
+give as parameter while building
+-DVTK_MODULE_ENABLE_VTK_cli11=WANT or
+-DVTK_MODULE_ENABLE_VTK_fmt=WANT
+-DVTK_BUILD_TESTING=ON
+
 # prepare
 add the VTK bin directory to your path. This will resolve the VTK dll's at run time.
 C:\Users\simon\build\vtk\bin\Debug
